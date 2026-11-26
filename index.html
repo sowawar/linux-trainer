@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тренажёр команд Linux</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap">
+<style>
+/* VOICE everyday study tool, calm and focused, made for drilling before an oral exam
+   IDEA an Ubuntu terminal window: each question arrives as a line in a shell session
+   PICTURE the terminal itself, large: prompt, task, typed answer and the verdict printed back
+   COLOUR white or plum-black page, aubergine #300a24 terminal, Ubuntu orange accent, Tango green/red verdicts
+   TYPE Ubuntu for interface text, Ubuntu Mono for everything typed or printed in the shell
+   LAYOUT title and score across the top, modes and topics under it, terminal full width, topic progress below; phone stacks */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#170b15);--ink:light-dark(#22111f,#f1e9ef);--mut:light-dark(#6d5a68,#b3a1ad);--line:light-dark(#e6dbe2,#3a2535);--chip:light-dark(#f6eff3,#24131f);--acc:#e95420;--accd:light-dark(#c4421a,#ff7a4a);--term:#300a24;--tink:#eee7ec;--tmut:#b49aab;--ok:#8ae234;--no:#ff5f5f;--blue:#8cb4e6}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Ubuntu,"Segoe UI",system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1000px;margin:0 auto;padding:clamp(20px,3.5vw,44px) max(4vw,16px) 56px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:22px}
+h1{font-size:clamp(30px,4.6vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0;font-weight:700;text-wrap:balance}
+.sub{margin:8px 0 0;color:var(--mut)}
+.score{display:flex;gap:18px;align-items:baseline;white-space:nowrap}
+.score b{font-size:32px;line-height:1;font-weight:700}
+.score span{color:var(--mut);font-size:14px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tabs button,.chips button,.btn{font:inherit;font-size:15px;min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chips button{min-height:36px;font-size:14px;padding:0 12px}
+.chips button[aria-pressed=true]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--bg))}
+.chips button[aria-pressed=false]{opacity:.6}
+.opts-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px}
+.opts-row label{font-size:14px;color:var(--mut)}
+select{font:inherit;font-size:16px;min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:500}
+.btn:focus-visible,.tabs button:focus-visible,.chips button:focus-visible,select:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.term{background:var(--term);color:var(--tink);border-radius:12px;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#3d1232;font-size:14px;color:var(--tmut)}
+.dots{display:flex;gap:7px}
+.dots i{width:13px;height:13px;border-radius:50%;background:#6b4a62}
+.dots i:first-child{background:var(--acc)}
+.bar .tt{flex:1;text-align:center;font-weight:500;color:var(--tink)}
+.bar .cnt{font-family:"Ubuntu Mono",monospace;font-size:15px;white-space:nowrap}
+.prog{height:3px;background:#4a1c40}
+.prog i{display:block;height:100%;background:var(--acc);transition:width .3s}
+.screen{padding:clamp(16px,3vw,28px);min-height:360px;font-size:16px}
+.cm{font-family:"Ubuntu Mono",monospace;color:var(--tmut);margin:0 0 8px;font-size:15px}
+.q{font-size:clamp(18px,2.4vw,22px);line-height:1.35;margin:0 0 16px;font-weight:500}
+.q code,.vd code{font-family:"Ubuntu Mono",monospace;background:rgba(255,255,255,.1);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+pre{font-family:"Ubuntu Mono",monospace;font-size:15px;line-height:1.45;margin:0 0 16px;padding:12px 14px;border-radius:8px;overflow-x:auto;white-space:pre}
+pre.scr{background:#1f0618;color:#e8dfe5;border-left:3px solid #6b4a62}
+pre.code{background:#1f0618;color:#f6f0f4;border-left:3px solid var(--blue)}
+mark{background:var(--acc);color:#fff;border-radius:3px;padding:0 2px}
+.ln{display:flex;align-items:center;gap:8px;font-family:"Ubuntu Mono",monospace;font-size:17px;flex-wrap:wrap}
+.ps{white-space:nowrap}
+.ps b{color:var(--ok)}
+.ps i{color:var(--blue);font-style:normal}
+.ln input,textarea{flex:1 1 220px;font:inherit;font-family:"Ubuntu Mono",monospace;font-size:17px;color:#fff;background:rgba(255,255,255,.06);border:1px solid #6b4a62;border-radius:6px;padding:10px 12px;min-height:44px;caret-color:var(--acc)}
+textarea{width:100%;resize:vertical;display:block;margin-top:6px}
+.ln input:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px}
+.ln input:disabled,textarea:disabled{opacity:.85}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;font:inherit;font-size:16px;color:var(--tink);background:rgba(255,255,255,.05);border:1px solid #5a3550;border-radius:8px;padding:11px 14px;min-height:44px;cursor:pointer}
+.opt b{font-family:"Ubuntu Mono",monospace;color:var(--tmut);font-weight:400;flex:none}
+.opt:hover:not(:disabled){border-color:var(--acc)}
+.opt:focus-visible{outline:2px solid var(--acc)}
+.opt.good{border-color:var(--ok);background:rgba(138,226,52,.14)}
+.opt.bad{border-color:var(--no);background:rgba(255,95,95,.14)}
+.opt:disabled{cursor:default}
+.vd{margin-top:18px;padding-top:14px;border-top:1px dashed #6b4a62}
+.vd p{margin:0 0 8px}
+.vt{font-family:"Ubuntu Mono",monospace;font-weight:700;font-size:18px}
+.vd.ok .vt{color:var(--ok)}
+.vd.no .vt{color:var(--no)}
+.alt{color:var(--tmut);font-size:15px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
+.keys{color:var(--mut);font-size:14px;margin:0}
+.err{color:var(--no);font-family:"Ubuntu Mono",monospace;margin:10px 0 0;font-size:15px}
+.sum li{margin-bottom:6px}
+h2{font-size:22px;line-height:1.2;margin:40px 0 12px;letter-spacing:-.01em}
+.tp{display:grid;grid-template-columns:minmax(9em,13em) minmax(0,1fr) max-content;gap:8px 14px;align-items:center}
+.tp .nm{font-size:15px}
+.tp .tr{height:12px;border-radius:6px;background:var(--chip);border:1px solid var(--line);display:flex;overflow:hidden}
+.tp .tr i{display:block;height:100%}
+.tp .g{background:#4e9a06}
+.tp .r{background:#cc3a3a}
+.tp .n{font-size:14px;color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
+details{margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+summary{cursor:pointer;font-weight:500;min-height:44px;display:flex;align-items:center}
+details p,details li{color:var(--mut);max-width:70ch}
+@media(max-width:600px){
+.screen{min-height:300px}
+.bar .tt{text-align:left}
+.tp{grid-template-columns:minmax(0,1fr) max-content}
+.tp .tr{grid-column:1/-1;order:3}
+.score b{font-size:26px}
+}
+@media(prefers-reduced-motion:reduce){.prog i{transition:none}}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#300a24">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Linux тренажёр">
+</head>
+<body>
+<div class="wrap">
+<header>
+<div>
+<h1>Команды Linux к коллоквиуму</h1>
+<p class="sub" id="sub">Тренажёр по лабораторным 1–10</p>
+</div>
+<div class="score" aria-live="polite">
+<div><b id="sRight">0</b> <span>верно</span></div>
+<div><b id="sDone">0</b> <span>отвечено</span></div>
+<div><b id="sStreak">0</b> <span>подряд</span></div>
+</div>
+</header>
+
+<div class="tabs" id="tabs" role="group" aria-label="Режим">
+<button data-m="all" aria-pressed="true">Всё вперемешку</button>
+<button data-m="cmd" aria-pressed="false">Напиши команду</button>
+<button data-m="out" aria-pressed="false">Команда по выводу</button>
+<button data-m="bash" aria-pressed="false">Bash-скрипты</button>
+<button data-m="mc" aria-pressed="false">Тест</button>
+</div>
+<div class="chips" id="chips" role="group" aria-label="Темы"></div>
+<div class="opts-row">
+<label for="len">Вопросов в сессии</label>
+<select id="len"><option value="10">10</option><option value="20" selected>20</option><option value="40">40</option><option value="0">все</option></select>
+<button class="btn" id="restart">Новая сессия</button>
+<button class="btn" id="mist">Повторить ошибки</button>
+</div>
+
+<section class="term" aria-label="Терминал">
+<div class="bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tt">student@linux: ~</span><span class="cnt" id="cnt"></span></div>
+<div class="prog"><i id="pbar" style="width:0"></i></div>
+<div class="screen" id="screen" aria-live="polite"></div>
+</section>
+<div class="acts">
+<button class="btn pri" id="check">Проверить</button>
+<button class="btn" id="skip">Не знаю</button>
+<button class="btn pri" id="next" hidden>Дальше</button>
+</div>
+<p class="keys">Enter — проверить и дальше. В тесте можно нажимать 1–4. В поле «Вывод» новая строка — Enter, проверить — Ctrl+Enter.</p>
+
+<h2>Прогресс по темам</h2>
+<div class="tp" id="tp"></div>
+<div class="acts"><button class="btn" id="reset">Сбросить прогресс</button></div>
+
+<details>
+<summary>Как засчитываются ответы</summary>
+<ul>
+<li>sudo в начале можно писать или не писать, «$ » в начале тоже не мешает.</li>
+<li>Лишние пробелы не важны, одинарные и двойные кавычки равноценны, пробел после &gt;, &gt;&gt;, 2&gt; можно ставить или нет.</li>
+<li>Засчитываются и равноценные варианты: kill -15 и kill -TERM, ip a и ip addr, ss -tulpn вместо ss -tulpen, nginx и nginx.service.</li>
+<li>В заданиях «что выведет» сравниваются слова по порядку: строки можно разделять пробелом.</li>
+<li>Прогресс хранится только в этом браузере.</li>
+</ul>
+</details>
+</div>
+
+<script>
+{
+/*DATA*/
+const T={l1:'Лаб 1 · Установка, пакеты',l2:'Лаб 2 · Диски, GRUB',l3:'Лаб 3 · Терминал, текст',l5:'Лаб 5 · Процессы, systemd',l6:'Лаб 6 · Разделы, LVM',l7:'Лаб 7 · Сеть, SSH, UFW',l8:'Лаб 8 · Bash',l9:'Лаб 9 · Bash+, cron, бэкап',l10:'Лаб 10 · Docker, k8s',lec:'Лекции 12–13 (доп.)'};
+const sv=(v,n)=>new RegExp('^systemctl '+v+' '+n+'(\\.service)?$');
+const kn=r=>new RegExp('^kubectl (?:(?:-n |--namespace[ =])lab10 '+r+'|'+r+' (?:-n |--namespace[ =])lab10)$');
+
+const MC=[
+['l1','Чем дистрибутив отличается от ядра Linux?',['Дистрибутив = ядро + системные программы, пакетный менеджер, установщик, окружение','Это одно и то же','Ядро включает в себя графическую среду и пакеты','Дистрибутив — это только установщик ядра'],'Ядро управляет железом, процессами и памятью; дистрибутив собирает вокруг него всё остальное.'],
+['l1','Какой пакетный менеджер и система инициализации у Alpine Linux?',['apk и OpenRC','apt и systemd','dnf и systemd','pacman и runit'],'Таблица из лабы 1: Mint/Debian — APT, Fedora — DNF, Alpine — APK + OpenRC.'],
+['l1','Где Fedora хранит описания подключённых репозиториев?',['/etc/yum.repos.d/*.repo','/etc/apt/sources.list','/etc/apk/repositories','/etc/pacman.conf'],'Debian/Mint — /etc/apt/sources.list и sources.list.d, Alpine — /etc/apk/repositories.'],
+['l1','Что означает символ <code>#</code> в конце строки приглашения?',['Оболочка работает от root','Обычный пользователь','Начало комментария','Ошибка последней команды'],'$ — обычный пользователь, # — суперпользователь (лабы 1 и 3).'],
+['l1','В Fedora по умолчанию дополнительно включена система мандатного контроля доступа…',['SELinux','AppArmor','UFW','Tomoyo'],'В таблице лабы 1 у Fedora указано «применение SELinux». В Ubuntu/Mint по умолчанию AppArmor.'],
+['l1','Как в Alpine (OpenRC) добавить nginx в автозапуск?',['rc-update add nginx default','systemctl enable nginx','chkconfig nginx on','update-rc.d nginx enable'],'У OpenRC службы запускают rc-service, а автозапуск — rc-update.'],
+['l2','Как в Linux проверить, что система загружена в режиме UEFI?',['Существует каталог /sys/firmware/efi','Существует файл /boot/grub/grub.cfg','Команда uname -r выводит efi','В /etc/fstab есть строка swap'],'test -d /sys/firmware/efi && echo UEFI || echo "Legacy BIOS" — команда из лабы 2.'],
+['l2','Какая файловая система обычно на EFI System Partition и куда она монтируется?',['FAT32, /boot/efi','ext4, /boot','NTFS, /efi','swap, /boot/efi'],'ESP общая для Windows и Linux; при установке её нельзя форматировать.'],
+['l2','Чем GPT отличается от MBR?',['GPT поддерживает диски больше 2 ТБ и много разделов, MBR — до 4 основных и 2 ТБ','GPT работает только с Legacy BIOS','MBR новее и надёжнее','Разницы нет'],'GPT хранит резервную копию таблицы и используется вместе с UEFI.'],
+['l2','Где хранятся пользовательские параметры GRUB в Linux Mint?',['/etc/default/grub','/boot/grub/grub.cfg','/etc/grub.conf','/boot/efi/grub.ini'],'grub.cfg генерируется автоматически — руками его не правят. После правки /etc/default/grub выполняют update-grub.'],
+['l2','Какой параметр /etc/default/grub задаёт время показа меню?',['GRUB_TIMEOUT','GRUB_DEFAULT','GRUB_CMDLINE_LINUX','GRUB_MENU_TIME'],'В лабе 2 разрешено менять только время отображения меню.'],
+['l2','От чего НЕ защищает шифрование LUKS?',['От вредоносной программы в работающей системе с открытым томом','От кражи выключенного ноутбука','От чтения снятого диска','От доступа к данным без пароля после выключения'],'LUKS защищает данные «в покое». Когда том открыт, данные доступны так же, как без шифрования.'],
+['l2','Зачем проверяют SHA-256 скачанного ISO?',['Чтобы убедиться, что файл не повреждён и не подменён','Чтобы ускорить установку','Чтобы расшифровать образ','Чтобы записать образ на флешку'],'Полученное значение сравнивают с опубликованным на официальном сайте.'],
+['l3','Чем терминал отличается от командной оболочки?',['Терминал — окно ввода/вывода, оболочка (bash) интерпретирует команды','Это синонимы','Оболочка — это графическая программа','Терминал выполняет скрипты, а оболочка нет'],''],
+['l3','Что обозначает <code>..</code> в пути?',['Родительский каталог','Текущий каталог','Домашний каталог','Корень'],'. — текущий, .. — родительский, ~ — домашний, / — корень.'],
+['l3','Какие файлы в Linux считаются скрытыми?',['Имя начинается с точки','С атрибутом hidden','Лежат в /tmp','Без прав чтения'],'Их показывает ls -a.'],
+['l3','Что будет с жёсткой и символической ссылкой после удаления исходного файла?',['Жёсткая продолжит работать, символическая станет битой','Обе перестанут работать','Обе продолжат работать','Жёсткая станет битой, символическая — нет'],'Жёсткая ссылка — второе имя того же inode, символическая хранит только путь.'],
+['l3','Чем отличаются <code>&gt;</code> и <code>&gt;&gt;</code>?',['> перезаписывает файл, >> дописывает в конец','> дописывает, >> перезаписывает','>> перенаправляет ошибки','Ничем'],''],
+['l3','Что делает <code>2&gt;&amp;1</code>?',['Направляет stderr туда же, куда stdout','Направляет stdout в файл с именем 1','Меняет потоки местами','Отключает ошибки'],'0 — stdin, 1 — stdout, 2 — stderr.'],
+['l3','Чем отличаются grep и find?',['grep ищет строки внутри файлов, find ищет сами файлы по имени, типу, размеру','Ничем','find ищет текст, grep — файлы','grep работает только с /etc'],''],
+['l3','Почему маску перед rm надо проверить через ls или printf?',['Маску раскрывает оболочка до запуска команды, и она может захватить лишние файлы','rm не понимает маски','Без проверки маска не сработает','Так требует root'],'rm не перемещает файлы в корзину.'],
+['l3','Какая команда выводит строки файла в обратном порядке?',['tac','rev','sort -r','tail -r'],'tac — это cat наоборот. rev переворачивает символы в каждой строке.'],
+['l5','Что означает состояние <code>Z</code> в ps?',['Зомби: процесс завершился, но родитель не забрал код возврата','Спящий процесс','Остановлен Ctrl+Z','Ждёт диск'],'R — выполняется, S — ожидание, D — непрерываемое ожидание, T — остановлен, Z — зомби.'],
+['l5','Какой сигнал посылает Ctrl+Z?',['SIGTSTP','SIGINT','SIGKILL','SIGHUP'],'Задание останавливается; продолжить — bg или fg.'],
+['l5','Чем SIGTERM отличается от SIGKILL?',['SIGTERM можно перехватить и корректно завершиться, SIGKILL ядро выполняет сразу','SIGKILL мягче','SIGTERM нельзя перехватить','Ничем'],'По лабе 5: сначала SIGTERM, и только если не помогло — SIGKILL. kill -9 первым применять нельзя.'],
+['l5','Какие сигналы нельзя перехватить через trap?',['SIGKILL и SIGSTOP','SIGINT и SIGTERM','SIGHUP и SIGINT','Все можно'],''],
+['l5','Диапазон nice и что может обычный пользователь?',['От −20 до 19; пользователь может только увеличивать nice (понижать приоритет)','От 0 до 100; всё что угодно','От −20 до 19; только уменьшать nice','От 1 до 10'],''],
+['l5','Что показывает load average?',['Среднее число готовых к выполнению и ждущих ввода-вывода задач за 1, 5 и 15 минут','Процент загрузки CPU','Свободную память','Число пользователей'],'Поэтому он не равен проценту CPU: на 4 ядрах load 4.0 — это полная загрузка.'],
+['l5','Чем <code>systemctl enable</code> отличается от <code>start</code>?',['enable — автозапуск при загрузке, start — запустить сейчас','Ничем','start включает автозапуск','enable перезапускает службу'],'enable --now делает и то и другое.'],
+['l5','Когда нужен <code>systemctl daemon-reload</code>?',['После создания или изменения unit-файла','После каждого start','Для перезагрузки ОС','Для очистки журнала'],''],
+['l5','Почему nohup не заменяет systemd?',['nohup только переживает закрытие терминала, а systemd следит за службой, перезапускает её и ведёт журнал','nohup работает только от root','nohup не умеет перенаправлять вывод','systemd медленнее'],''],
+['l5','В unit-файле lab5-demo какой Type у службы, которая выполняется один раз и завершается?',['oneshot','simple','forking','notify'],''],
+['l6','Почему в /etc/fstab лучше указывать UUID, а не /dev/sdb1?',['Имена /dev/sdX могут поменяться после перезагрузки','UUID короче','Так быстрее монтируется','/dev/sdb1 нельзя писать в fstab'],''],
+['l6','Зачем опция <code>nofail</code> в fstab?',['Система загрузится, даже если диска нет','Запрещает ошибки ФС','Монтирует только для чтения','Отключает проверку fsck'],''],
+['l6','Что означает код возврата e2fsck = 4?',['Ошибки не исправлены','Ошибок нет','Ошибки исправлены','Требуется перезагрузка'],'0 — нет ошибок, 1 — исправлены, 2 — нужна перезагрузка, 4 — не исправлены, 8+ — внутренняя ошибка.'],
+['l6','Можно ли запускать fsck на смонтированной ФС?',['Нет, сначала umount','Да, это безопасно','Только с -n','Только для swap'],'Ключ -n запрещает изменения, но и с ним проверку делают после размонтирования.'],
+['l6','Что такое PV, VG и LV в LVM?',['Физический том, группа томов (пул), логический том','Раздел, файловая система, каталог','Диск, swap, ext4','Процесс, группа, пользователь'],''],
+['l6','В каком порядке удалять LVM?',['umount → lvremove → vgremove → pvremove','pvremove → vgremove → lvremove','vgremove → lvremove → pvremove','Порядок не важен'],'Обратный порядку создания.'],
+['l6','Что делает ключ <code>-r</code> в <code>lvextend -r -L +512M</code>?',['Сразу расширяет и файловую систему','Удаляет том','Работает в режиме только чтения','Повторяет операцию'],'Без -r пришлось бы отдельно выполнить resize2fs.'],
+['l6','Что значит ошибка <code>target is busy</code> при umount?',['Какой-то процесс работает в каталоге или держит открытый файл','Диск сломан','Нет прав','Файловая система заполнена'],'Найти виновника: fuser -vm или lsof +D.'],
+['l6','Чем df отличается от du?',['df — занятость всей файловой системы, du — размер выбранных файлов и каталогов','Ничем','du показывает свободное место','df считает только скрытые файлы'],''],
+['l7','Что означает <code>/24</code> в 192.168.56.10/24?',['Длина префикса сети: маска 255.255.255.0','Номер порта','Количество хостов = 24','Номер VLAN'],''],
+['l7','Почему для host-only интерфейса не задают второй шлюз по умолчанию?',['Иначе появится второй default-маршрут и трафик в Интернет может уйти не туда','Так требует SSH','Шлюз нельзя задать вручную','Host-only не поддерживает IPv4'],''],
+['l7','Успешный ping по IP, но не по имени. Где проблема?',['В DNS','В кабеле','В маршрутизации','В SSH'],'Диагностику ведут снизу вверх: loopback → свой адрес → сосед → шлюз → внешний IP → имя.'],
+['l7','Что означают ключи <code>ss -lntup</code>?',['слушающие, числовые адреса, TCP, UDP, процессы','список, сеть, таблица, пользователь, порт','только TCP','только loopback'],''],
+['l7','Какие права должны быть у ~/.ssh и ~/.ssh/config?',['700 и 600','777 и 644','755 и 755','600 и 700'],''],
+['l7','Что делать перед <code>ufw enable</code> на удалённой машине?',['Разрешить SSH из лабораторной подсети и не закрывать текущий сеанс','Остановить ssh','Удалить все правила','Перезагрузиться'],'Иначе можно отрезать себе доступ.'],
+['l7','Что нужно сделать перед <code>systemctl reload ssh</code> после правки конфигурации?',['Проверить синтаксис sshd -t','Перезагрузить ОС','Удалить known_hosts','Выполнить ufw disable'],''],
+['l7','Что хранит файл ~/.ssh/known_hosts?',['Отпечатки ключей серверов, к которым уже подключались','Закрытые ключи','Пароли','Список пользователей сервера'],'Если ключ сервера изменился, ssh предупредит — без проверки соглашаться нельзя.'],
+['l7','Как связаны UFW и nftables?',['UFW — удобная надстройка, которая создаёт правила в nftables/iptables','Это два независимых экрана','nftables — графическая оболочка UFW','UFW работает только в Windows'],''],
+['l8','Чем <code>bash hello.sh</code> отличается от <code>./hello.sh</code>?',['./hello.sh требует права x и shebang, bash hello.sh — нет','Ничем','bash hello.sh требует права x','./hello.sh запускает скрипт в текущей оболочке'],''],
+['l8','Почему <code>name = "Ivan"</code> — ошибка?',['Вокруг = в присваивании не должно быть пробелов','Нельзя использовать кавычки','Имя переменной должно быть заглавным','Нужен export'],'Bash воспримет name как команду с аргументами = и Ivan.'],
+['l8','Чем <code>"$@"</code> отличается от <code>$*</code>?',['"$@" сохраняет границы каждого параметра, даже с пробелами','Ничем','$* сохраняет границы','"$@" — количество параметров'],''],
+['l8','Почему нельзя писать <code>for f in $(ls)</code>?',['Имена с пробелами разобьются на части','Это медленно','ls не работает в скриптах','for не принимает подстановку'],'Правильно: for f in ./*  или find -print0 + read -d \'\'.'],
+['l8','Что делает <code>local</code> в функции?',['Ограничивает видимость переменной этой функцией','Делает переменную константой','Экспортирует переменную','Удаляет переменную'],''],
+['l8','Куда принято выводить сообщения об ошибках в скрипте?',['В stderr: printf ... >&2','В stdout','В /dev/null','В файл error.txt'],''],
+['l8','Почему set -e не заменяет обработку ошибок?',['Он срабатывает не везде (в условиях, частях конвейеров, || и т. п.) и не объясняет, что случилось','Он вообще не работает в bash','Он отключает $?','Он работает только с sudo'],''],
+['l8','Что делает <code>set -o pipefail</code>?',['Код конвейера будет ненулевым, если упала любая его команда','Отключает конвейеры','Пишет ошибки в журнал','Останавливает скрипт при первой ошибке'],'Без pipefail код конвейера — это код последней команды.'],
+['l9','Что делает начальное двоеточие в <code>getopts \':s:d:k:nh\'</code>?',['Включает «тихий» режим: ошибки попадают в ветки : и ?','Делает опции обязательными','Разрешает длинные опции','Отключает OPTARG'],'Двоеточие после буквы означает, что опции нужен аргумент.'],
+['l9','Что делает <code>shift $((OPTIND - 1))</code>?',['Убирает уже разобранные опции, оставляя позиционные параметры','Сдвигает массив','Сбрасывает OPTIND','Удаляет последний параметр'],''],
+['l9','Зачем в backup.sh flock?',['Чтобы не запустились два экземпляра одновременно','Чтобы зашифровать архив','Чтобы ускорить tar','Чтобы удалить старые копии'],'Второй экземпляр завершается с кодом 75.'],
+['l9','Почему rsync-зеркало с --delete не заменяет историческую копию?',['Удалённый или испорченный файл исчезнет и из зеркала при следующей синхронизации','rsync не копирует права','Зеркало занимает меньше места','rsync не работает с каталогами'],''],
+['l9','Что нужно для восстановления из инкрементных tar-архивов?',['Извлечь все архивы цепочки строго по времени, начиная с полного','Только последний инкремент','Только snapshot-файл','Любой архив цепочки'],'Потеря одного звена нарушает цепочку.'],
+['l9','Порядок полей crontab:',['минута, час, день месяца, месяц, день недели','час, минута, день, месяц, год','секунда, минута, час, день, месяц','день недели, месяц, день, час, минута'],''],
+['l9','Зачем в crontab задают PATH и абсолютные пути?',['cron запускает задания в урезанном окружении','cron не понимает относительные пути в принципе','Так быстрее','Чтобы скрыть секреты'],''],
+['l9','Что делает <code>Persistent=true</code> в таймере systemd?',['Запускает пропущенное задание при следующем старте, если машина была выключена','Делает таймер бесконечным','Запрещает отключать таймер','Сохраняет журнал'],'RandomizedDelaySec добавляет случайную задержку, чтобы задания не стартовали одновременно.'],
+['l9','Где лежат пользовательские unit-файлы systemd?',['~/.config/systemd/user','/etc/systemd/system','/lib/systemd/user','~/.systemd'],'Управляются командой systemctl --user.'],
+['l9','Когда резервная копия считается рабочей?',['Только после проверки восстановления','Когда создан архив','Когда посчитан SHA-256','Когда она в cron'],''],
+['l10','Контейнер отличается от виртуальной машины тем, что…',['использует ядро хоста; изоляция — namespaces, ограничения — cgroups','имеет собственное ядро','всегда медленнее','работает только в Windows'],'Поэтому uname -a в контейнере покажет ядро хоста.'],
+['l10','Чем образ отличается от контейнера?',['Образ — неизменяемый шаблон, контейнер — запущенный экземпляр с записываемым слоем','Ничем','Контейнер — это архив образа','Образ — это работающий процесс'],''],
+['l10','Что даёт <code>-p 127.0.0.1:8080:80</code>?',['Порт 80 контейнера доступен на порту 8080 только с loopback хоста','Порт 8080 контейнера → 80 хоста','Открывает порт всему Интернету','Запрещает сеть'],''],
+['l10','Что произойдёт с данными в именованном томе после docker rm контейнера?',['Сохранятся','Удалятся','Переедут в образ','Станут только для чтения'],'Том удаляется отдельно: docker volume rm или compose down -v.'],
+['l10','Зачем пользовательская bridge-сеть вместо сети по умолчанию?',['В ней работает DNS по именам контейнеров','Она быстрее','Она даёт выход в Интернет','Она обязательна для -p'],''],
+['l10','Чем readinessProbe отличается от livenessProbe?',['readiness исключает pod из Service, пока он не готов; liveness перезапускает зависший контейнер','Ничем','liveness удаляет pod навсегда','readiness перезапускает контейнер'],''],
+['l10','Что означает CrashLoopBackOff?',['Контейнер постоянно падает, Kubernetes перезапускает его с растущей паузой','Не хватает узлов','Образ не найден','Pod готов'],'Pending обычно означает, что pod не удаётся разместить (ресурсы, образ, тома).'],
+['l10','Почему нельзя монтировать /var/run/docker.sock в контейнер?',['Это фактически root-доступ к хосту','Сокет медленный','Контейнер упадёт','Docker запретит запуск'],''],
+['lec','Как запустить скрипт в режиме отладки (лекция 12)?',['#!/bin/bash -x или bash -x script.sh','#!/bin/bash -d','bash -n script.sh','debug script.sh'],'bash -n только проверяет синтаксис, ничего не выполняя.'],
+['lec','Какой оператор отношения означает «меньше или равно»?',['-le','-lt','-ge','-ne'],'-lt <, -gt >, -le <=, -ge >=, -eq ==, -ne !='],
+['lec','Чем заканчивается ветка case в bash?',[';;','break','esac','fi'],'На слайде лекции 12 написано break — это ошибка слайда: в bash ветку закрывают ;; (break — для циклов).'],
+['lec','Чем source script.sh отличается от ./script.sh?',['source выполняет скрипт в текущей оболочке, ./ — в дочернем процессе','Ничем','source требует права x','./ сохраняет переменные в текущей оболочке'],''],
+['lec','Какой процесс в классической загрузке Unix читает /etc/inittab?',['init (PID 1)','getty','login','bash'],'Этапы: BIOS → загрузчик → ядро → монтирование корня → init → /etc/rc → getty.'],
+['lec','Какая команда показывает историю входов из /var/log/wtmp?',['last','lastlog','faillog','who -b'],'lastlog — последний вход каждого пользователя, faillog — неудачные попытки.'],
+['lec','Какая программа выполняет ротацию журналов?',['logrotate','syslogd','journalctl','cron'],''],
+['lec','Что делает rpm -Va?',['Проверяет все установленные пакеты на изменения файлов','Устанавливает все пакеты','Удаляет все пакеты','Показывает версии'],'Признаки: 5 — контрольная сумма, S — размер, T — время изменения (на слайде написано «режим доступа»).'],
+['lec','Что означают поля строки /etc/passwd?',['имя:пароль:UID:GID:комментарий:домашний каталог:shell','имя:группа:shell:пароль','UID:имя:хеш:срок','имя:UID:домашний каталог'],'Сам хеш пароля сейчас хранится в /etc/shadow, в passwd стоит x.']
+];
+
+const CMD=[
+['l1','Вывести название и версию дистрибутива из стандартного файла','cat /etc/os-release',['less /etc/os-release','cat /usr/lib/os-release'],'Файл есть во всех четырёх дистрибутивах лабы.','PRETTY_NAME="Linux Mint 22.1"\nNAME="Linux Mint"\nVERSION_ID="22.1"'],
+['l1','Узнать версию ядра','uname -r',[],'','6.8.0-51-generic'],
+['l1','Узнать архитектуру системы','uname -m',['arch'],'','x86_64'],
+['l1','Mint/Debian: обновить список пакетов из репозиториев','apt update',['apt-get update'],'update только обновляет списки, ничего не ставит.'],
+['l1','Mint/Debian: обновить установленные пакеты','apt upgrade',['apt-get upgrade','apt full-upgrade','apt upgrade -y'],''],
+['l1','Fedora: обновить все пакеты','dnf upgrade',['dnf update','dnf upgrade -y','dnf update -y','dnf upgrade --refresh'],''],
+['l1','Alpine: обновить индекс и пакеты одной строкой','apk update && apk upgrade',['apk update; apk upgrade','apk upgrade -U','apk -U upgrade'],''],
+['l1','Mint/Debian: установить nano','apt install nano',['apt install -y nano','apt-get install nano','apt-get install -y nano'],''],
+['l1','Fedora: установить nano','dnf install nano',['dnf install -y nano'],''],
+['l1','Alpine: установить nano','apk add nano',[],''],
+['l1','Mint/Debian: удалить пакет neofetch','apt remove neofetch',['apt purge neofetch','apt-get remove neofetch','apt remove -y neofetch'],'purge удаляет ещё и конфигурационные файлы.'],
+['l1','Fedora: удалить пакет neofetch','dnf remove neofetch',['dnf remove -y neofetch','dnf erase neofetch'],''],
+['l1','Fedora: показать подключённые репозитории','dnf repolist',['dnf repolist all','dnf repolist enabled'],'Файлы — в /etc/yum.repos.d/.'],
+['l1','Alpine: посмотреть файл с адресами репозиториев','cat /etc/apk/repositories',[],''],
+['l1','Debian/Mint: посмотреть основной файл репозиториев APT','cat /etc/apt/sources.list',['ls /etc/apt/sources.list.d','ls /etc/apt/sources.list.d/'],'В новых версиях записи лежат в /etc/apt/sources.list.d/ (в Mint — official-package-repositories.list, в Debian 12 — debian.sources).'],
+['l1','Mint/Fedora: запустить nginx и включить автозапуск одной командой','systemctl enable --now nginx',[/^systemctl (enable --now|--now enable) nginx(\.service)?$/],''],
+['l1','Проверить состояние nginx (systemd)','systemctl status nginx',[sv('status','nginx')],''],
+['l1','Alpine (OpenRC): запустить nginx','rc-service nginx start',['service nginx start','/etc/init.d/nginx start'],''],
+['l1','Alpine (OpenRC): добавить nginx в автозапуск','rc-update add nginx default',['rc-update add nginx'],''],
+['l1','Fedora: постоянно разрешить HTTP в firewalld','firewall-cmd --permanent --add-service=http',['firewall-cmd --add-service=http --permanent'],'Затем firewall-cmd --reload.'],
+['l1','Узнать, как получить root: в каких группах текущий пользователь','groups',['id'],'В Mint/Debian/Ubuntu — группа sudo, в Fedora — wheel.'],
+['l2','Посчитать SHA-256 образа linuxmint-22.1-cinnamon-64bit.iso','sha256sum linuxmint-22.1-cinnamon-64bit.iso',[/^sha256sum linuxmint-.*\.iso$/],'','2f1d6e…c9a0  linuxmint-22.1-cinnamon-64bit.iso'],
+['l2','Одной строкой вывести UEFI или Legacy BIOS в зависимости от режима загрузки','test -d /sys/firmware/efi && echo "UEFI" || echo "Legacy BIOS"',['[ -d /sys/firmware/efi ] && echo "UEFI" || echo "Legacy BIOS"','test -d /sys/firmware/efi && echo UEFI || echo "Legacy BIOS"','[ -d /sys/firmware/efi ] && echo UEFI || echo "Legacy BIOS"'],'','UEFI'],
+['l2','Показать все диски и их таблицы разделов','fdisk -l',[],'Тип таблицы виден в строке Disklabel type: gpt / dos.'],
+['l2','Показать дерево устройств с файловыми системами, метками и UUID','lsblk -f',['lsblk --fs'],''],
+['l2','Показать дерево точек монтирования','findmnt',[],''],
+['l2','Показать занятость файловых систем с типами в удобных единицах','df -hT',['df -Th','df -h -T','df -T -h'],''],
+['l2','Показать активные области подкачки','swapon --show',['swapon -s','cat /proc/swaps'],''],
+['l2','Показать UUID и типы всех разделов','blkid',[],'Нужны права root: sudo blkid.'],
+['l2','Сводка: имя компьютера, ОС, ядро, архитектура','hostnamectl',['hostnamectl status'],''],
+['l2','Показать IP-адреса интерфейсов кратко','ip -br address',['ip -br a','ip -br addr','ip -brief address'],''],
+['l2','Сделать резервную копию /etc/default/grub в /etc/default/grub.lab2.bak','cp /etc/default/grub /etc/default/grub.lab2.bak',[],''],
+['l2','Открыть настройки GRUB в nano','nano /etc/default/grub',[],''],
+['l2','Linux Mint: пересобрать конфигурацию GRUB после правки','update-grub',['grub-mkconfig -o /boot/grub/grub.cfg'],'В Fedora: grub2-mkconfig -o /boot/grub2/grub.cfg. В Manjaro тоже есть update-grub.'],
+['l2','Повыш. сложность: отформатировать /dev/sdb3 как контейнер LUKS','cryptsetup luksFormat /dev/sdb3',[],'Уничтожает данные на разделе!'],
+['l2','Повыш. сложность: открыть LUKS-раздел /dev/sdb3 под именем lab2crypt','cryptsetup open /dev/sdb3 lab2crypt',['cryptsetup luksOpen /dev/sdb3 lab2crypt','cryptsetup open --type luks /dev/sdb3 lab2crypt'],'Появится /dev/mapper/lab2crypt.'],
+['l2','Повыш. сложность: войти в смонтированную в /mnt систему для восстановления GRUB','chroot /mnt',['arch-chroot /mnt'],''],
+['l3','Узнать имя текущего пользователя','whoami',['id -un','echo $USER'],'','student'],
+['l3','Узнать имя компьютера','hostname',['cat /etc/hostname','hostnamectl hostname'],''],
+['l3','Показать текущий каталог','pwd',[],''],
+['l3','Вывести путь к домашнему каталогу через переменную','echo $HOME',['echo "$HOME"','echo ~'],''],
+['l3','Вывести оболочку входа через переменную','echo $SHELL',['echo "$SHELL"'],'','/bin/bash'],
+['l3','Узнать, какая оболочка работает сейчас (только имя процесса текущей оболочки)','ps -p $$ -o comm=',['ps -p $$ -o comm','echo $0'],'$$ — PID текущей оболочки.','bash'],
+['l3','Открыть руководство по ls','man ls',[],''],
+['l3','Краткое описание команды grep одной строкой','whatis grep',['man -f grep'],''],
+['l3','Найти команды по ключевому слову copy','apropos copy',['man -k copy'],''],
+['l3','Узнать тип команды cd (встроенная, файл, алиас)','type cd',[],'','cd is a shell builtin'],
+['l3','Узнать путь к исполняемому файлу grep','command -v grep',['which grep','type -p grep'],''],
+['l3','Перейти в /etc по абсолютному пути','cd /etc',[],''],
+['l3','Вернуться в предыдущий каталог','cd -',[],''],
+['l3','Перейти в домашний каталог','cd ~',['cd'],''],
+['l3','Подняться на уровень выше','cd ..',['cd ../'],''],
+['l3','Создать lab3_ivanov с подкаталогами source, documents, logs, results, backup, temp одной командой','mkdir -p lab3_ivanov/{source,documents,logs,results,backup,temp}',[],'Фигурные скобки раскрывает оболочка, -p создаёт родителя.'],
+['l3','Создать пустой файл notes.txt','touch notes.txt',[],''],
+['l3','Создать скрытый файл .lab3_profile','touch .lab3_profile',[],''],
+['l3','Показать текущую дату и время','date',[],''],
+['l3','Календарь на сентябрь 2026','cal 9 2026',['ncal 9 2026','cal 09 2026'],''],
+['l3','Календарь на весь 2026 год','cal 2026',['ncal 2026','cal -y 2026'],''],
+['l3','Записать календарь текущего месяца в documents/calendar.txt','cal > documents/calendar.txt',[],''],
+['l3','Дописать календарь 2026 года в конец documents/calendar.txt','cal 2026 >> documents/calendar.txt',[],''],
+['l3','Показать все файлы, включая скрытые, в подробном формате','ls -la',['ls -al','ls -l -a','ls -a -l','ls -lA','ls -Al'],''],
+['l3','Подробный список с размерами в K/M/G','ls -lh',['ls -hl','ls -l -h','ls -lah','ls -alh'],''],
+['l3','Определить тип файла notes.txt','file notes.txt',[],''],
+['l3','Показать метаданные notes.txt (inode, права, времена)','stat notes.txt',[],''],
+['l3','Скопировать все .txt в каталог backup','cp *.txt backup/',['cp *.txt backup','cp -v *.txt backup/','cp -v *.txt backup'],''],
+['l3','Скопировать каталог documents в backup со всем содержимым','cp -r documents backup/',['cp -r documents backup','cp -R documents backup','cp -R documents backup/','cp -a documents backup','cp -a documents backup/'],'Без -r cp откажется копировать каталог.'],
+['l3','Переименовать old.txt в new.txt','mv old.txt new.txt',[],''],
+['l3','Переместить report.log в каталог logs','mv report.log logs/',['mv report.log logs'],''],
+['l3','Сравнить notes.txt и его копию backup/notes.txt','diff notes.txt backup/notes.txt',['cmp notes.txt backup/notes.txt'],'Пустой вывод diff — файлы одинаковые.'],
+['l3','Показать файлы вида file1.txt, fileA.txt (ровно один символ после file)','ls file?.txt',[],''],
+['l3','Показать файлы, имя которых начинается на a, b или c','ls [abc]*',['ls [a-c]*'],''],
+['l3','Показать все файлы с расширением .log','ls *.log',[],''],
+['l3','Создать жёсткую ссылку hard_link.txt на source.txt','ln source.txt hard_link.txt',[],''],
+['l3','Создать символическую ссылку symbolic_link.txt на source.txt','ln -s source.txt symbolic_link.txt',[],''],
+['l3','Показать source.txt, hard_link.txt, symbolic_link.txt с номерами inode','ls -li source.txt hard_link.txt symbolic_link.txt',['ls -il source.txt hard_link.txt symbolic_link.txt'],'У жёсткой ссылки тот же inode.'],
+['l3','Записать вывод uname -a в system.txt (с перезаписью)','uname -a > system.txt',[],''],
+['l3','Дописать текущую дату в конец system.txt','date >> system.txt',[],''],
+['l3','Записать df -hT в df.txt','df -hT > df.txt',['df -Th > df.txt'],''],
+['l3','ls /etc /not_exists: обычный вывод в output.txt, ошибки в errors.txt','ls /etc /not_exists > output.txt 2> errors.txt',['ls /etc /not_exists 2> errors.txt > output.txt','ls /etc /not_exists 1> output.txt 2> errors.txt'],''],
+['l3','Записать и вывод, и ошибки команды ls /etc /not_exists в all.txt','ls /etc /not_exists > all.txt 2>&1',['ls /etc /not_exists &> all.txt'],'Порядок важен: 2>&1 ставится после > файл.'],
+['l3','Из data.txt отобрать строки с Linux, отсортировать, убрать повторы и посчитать','cat data.txt | grep "Linux" | sort | uniq | wc -l',['grep "Linux" data.txt | sort | uniq | wc -l','grep Linux data.txt | sort | uniq | wc -l','cat data.txt | grep Linux | sort | uniq | wc -l','grep Linux data.txt | sort -u | wc -l','grep "Linux" data.txt | sort -u | wc -l'],'Пример конвейера из лабы 3.'],
+['l3','Вывести первые 10 имён пользователей из /etc/passwd по алфавиту','cut -d: -f1 /etc/passwd | sort | head',[/^cut -d ?"?:"? -f ?1 \/etc\/passwd \| sort \| head( -n ?10| -10)?$/],''],
+['l3','Найти linux в documents/file.txt без учёта регистра и с номерами строк','grep -in "linux" documents/file.txt',[/^grep -(in|ni|i -n|n -i) "?linux"? documents\/file\.txt$/],''],
+['l3','Найти error рекурсивно во всех файлах каталога logs/','grep -r "error" logs/',[/^grep -[rR] "?error"? logs\/?$/],''],
+['l3','Найти в текущем каталоге все обычные файлы *.txt','find . -type f -name "*.txt"',[/^find \. (-type f -name "\*\.txt"|-name "\*\.txt" -type f)$/],''],
+['l3','Найти обычные файлы больше 1 МБ','find . -type f -size +1M',['find . -size +1M -type f'],''],
+['l3','Найти обычные файлы, изменённые за последние сутки','find . -type f -mtime -1',['find . -mtime -1 -type f'],''],
+['l3','Найти все .log и сохранить список в results/find.txt','find . -name "*.log" > results/find.txt',['find . -type f -name "*.log" > results/find.txt','find . -name "*.log" -type f > results/find.txt'],''],
+['l3','Объединить a.txt и b.txt в all.txt','cat a.txt b.txt > all.txt',[],''],
+['l3','Вывести строки file.txt в обратном порядке','tac file.txt',[],''],
+['l3','Показать первые 5 строк file.txt','head -n 5 file.txt',['head -5 file.txt','head -n5 file.txt'],''],
+['l3','Показать последние 5 строк file.txt','tail -n 5 file.txt',['tail -5 file.txt','tail -n5 file.txt'],''],
+['l3','Посчитать строки в file.txt','wc -l file.txt',['wc -l < file.txt','cat file.txt | wc -l'],''],
+['l3','Отсортировать file.txt и посчитать, сколько раз встречается каждая строка','sort file.txt | uniq -c',['cat file.txt | sort | uniq -c'],'uniq убирает только соседние повторы, поэтому сначала sort.'],
+['l3','Перевести содержимое file.txt в верхний регистр','tr "a-z" "A-Z" < file.txt',['tr a-z A-Z < file.txt','cat file.txt | tr a-z A-Z','cat file.txt | tr "a-z" "A-Z"','tr "[:lower:]" "[:upper:]" < file.txt','cat file.txt | tr "[:lower:]" "[:upper:]"'],'tr читает только stdin, имя файла ему не передают.'],
+['l3','Показать последние 10 команд истории','history 10',['history | tail -n 10','history | tail -10'],''],
+['l3','Повторить последнюю команду','!!',[],''],
+['l3','Выполнить команду истории под номером 42','!42',[],''],
+['l3','Сохранить историю в logs/history.txt','history > logs/history.txt',[],'Сначала проверить, что в истории нет паролей.'],
+['l3','Создать временный псевдоним ll для подробного списка','alias ll="ls -l"',['alias ll="ls -la"','alias ll="ls -alF"','alias ll="ls -lh"','alias ll="ls -lah"','alias ll="ls -al"'],'Живёт до закрытия терминала; постоянный — в ~/.bashrc.'],
+['l3','Узнать размер каталога lab3_ivanov одним числом','du -sh lab3_ivanov',['du -sh lab3_ivanov/','du -hs lab3_ivanov'],''],
+['l3','Проверить, какие файлы попадут под маску temp/*, ничего не удаляя','ls temp/*',['echo temp/*','printf "%s\\n" temp/*','ls -d temp/*'],''],
+['l3','Удалить temp/file.txt с запросом подтверждения','rm -i temp/file.txt',[],''],
+['l3','Удалить каталог temp с содержимым, спросив подтверждение один раз','rm -r -I temp',['rm -rI temp','rm -Ir temp','rm -I -r temp'],'-I спрашивает один раз, -i — про каждый файл.'],
+['l5','Показать время работы системы и load average','uptime',['w'],'',' 10:21:07 up  2:14,  1 user,  load average: 0.31, 0.22, 0.18'],
+['l5','Показать процессы текущего пользователя','ps -u $USER',['ps -u "$USER"','ps -U $USER','ps -fu $USER','ps -u student'],''],
+['l5','Все процессы: только столбцы pid, ppid и cmd','ps -eo pid,ppid,cmd',['ps -e -o pid,ppid,cmd','ps -eo pid,ppid,command','ps -eo pid,ppid,args','ps -eo pid,ppid,comm'],''],
+['l5','Все процессы со столбцами pid,ppid,user,stat,ni,pcpu,pmem,lstart,cmd, по убыванию CPU','ps -eo pid,ppid,user,stat,ni,pcpu,pmem,lstart,cmd --sort=-pcpu',['ps -eo pid,ppid,user,stat,ni,pcpu,pmem,lstart,cmd --sort -pcpu'],'Команда из методички лабы 5.'],
+['l5','Дерево процессов с PID','pstree -p',[],''],
+['l5','Найти процессы bash и показать их командные строки','pgrep -a bash',['pgrep -al bash'],''],
+['l5','Найти свои процессы sleep с командной строкой','pgrep -a -u $USER sleep',['pgrep -u $USER -a sleep','pgrep -au $USER sleep','pgrep -a -u "$USER" sleep'],''],
+['l5','Список заданий текущей оболочки с PID','jobs -l',[],''],
+['l5','Продолжить остановленное задание 1 в фоне','bg %1',['bg 1','bg'],''],
+['l5','Вернуть задание 1 на передний план','fg %1',['fg 1','fg'],''],
+['l5','Запустить sleep 30 в фоне','sleep 30 &',[],''],
+['l5','Дождаться завершения фонового задания 1','wait %1',[],''],
+['l5','Через nohup запустить sh -c "date; sleep 60; date" в фоне: stdout в lab5.out, stderr в lab5.err','nohup sh -c "date; sleep 60; date" > lab5.out 2> lab5.err &',[],''],
+['l5','Показать список сигналов','kill -l',[],''],
+['l5','Сохранить PID последнего фонового процесса в pid1','pid1=$!',[],''],
+['l5','Послать SIGTERM процессу 4242 (по имени сигнала)','kill -TERM 4242',['kill 4242','kill -15 4242','kill -SIGTERM 4242','kill -s TERM 4242','kill -s SIGTERM 4242'],'kill без номера и так шлёт SIGTERM.'],
+['l5','Послать SIGKILL процессу из переменной pid2','kill -KILL $pid2',['kill -9 $pid2','kill -SIGKILL $pid2','kill -s KILL $pid2','kill -KILL "$pid2"','kill -9 "$pid2"'],'Только если SIGTERM не помог.'],
+['l5','Проверить, существует ли процесс 4242','ps -p 4242',['kill -0 4242'],''],
+['l5','Запустить yes > /dev/null в фоне с nice 10','nice -n 10 yes > /dev/null &',['nice -10 yes > /dev/null &'],''],
+['l5','Установить процессу 5120 nice = 15','renice 15 -p 5120',['renice -n 15 -p 5120','renice -n 15 5120','renice 15 5120'],''],
+['l5','Показать pid, ni, pri, pcpu, cmd процесса 5120','ps -o pid,ni,pri,pcpu,cmd -p 5120',['ps -p 5120 -o pid,ni,pri,pcpu,cmd'],''],
+['l5','Наблюдать в top только за процессом 5120','top -p 5120',[],''],
+['l5','Показать память в удобных единицах','free -h',[],''],
+['l5','Статистика памяти и CPU каждую секунду, 5 раз','vmstat 1 5',[],''],
+['l5','Статистика ввода-вывода дисков (пакет sysstat)','iostat',['iostat -x','iostat -xz','iostat 1 5','iostat -x 1 5'],''],
+['l5','Показать только работающие службы','systemctl --type=service --state=running',['systemctl list-units --type=service --state=running','systemctl --state=running --type=service'],''],
+['l5','Показать службы с ошибкой','systemctl --failed',['systemctl list-units --failed','systemctl list-units --state=failed','systemctl --state=failed'],''],
+['l5','Посмотреть состояние службы cron','systemctl status cron',[sv('status','cron')],''],
+['l5','Показать зависимости службы cron','systemctl list-dependencies cron',[sv('list-dependencies','cron')],''],
+['l5','Дать сценарию /usr/local/bin/lab5-demo.sh права 755','chmod 755 /usr/local/bin/lab5-demo.sh',['chmod u=rwx,go=rx /usr/local/bin/lab5-demo.sh'],''],
+['l5','Перечитать unit-файлы после создания lab5-demo.service','systemctl daemon-reload',[],''],
+['l5','Запустить lab5-demo.service','systemctl start lab5-demo.service',[sv('start','lab5-demo')],''],
+['l5','Включить автозапуск lab5-demo.service','systemctl enable lab5-demo.service',[sv('enable','lab5-demo')],''],
+['l5','Остановить lab5-demo.service и убрать из автозапуска одной командой','systemctl disable --now lab5-demo.service',[/^systemctl (disable --now|--now disable) lab5-demo(\.service)?$/],''],
+['l5','Сбросить сохранённые состояния ошибок служб','systemctl reset-failed',[],''],
+['l5','Журнал службы lab5-demo.service','journalctl -u lab5-demo.service',[/^journalctl -u lab5-demo(\.service)?$/,/^journalctl --unit[ =]lab5-demo(\.service)?$/],''],
+['l5','Последние 20 записей журнала lab5-demo.service без пейджера','journalctl -u lab5-demo.service -n 20 --no-pager',[/^journalctl (-u lab5-demo(\.service)? (-n 20 --no-pager|--no-pager -n 20)|-n 20 -u lab5-demo(\.service)? --no-pager|--no-pager -u lab5-demo(\.service)? -n 20|-u lab5-demo(\.service)? -n 20)$/],''],
+['l5','Следить за журналом lab5-demo.service в реальном времени','journalctl -u lab5-demo.service -f',[/^journalctl (-u lab5-demo(\.service)? -f|-f -u lab5-demo(\.service)?)$/],'Выход — Ctrl+C.'],
+['l5','Журнал текущей загрузки','journalctl -b',['journalctl -b 0'],''],
+['l5','Сообщения уровня warning и серьёзнее за текущую загрузку','journalctl -b -p warning..alert',['journalctl -b -p warning','journalctl -p warning -b','journalctl -p 4 -b','journalctl -b -p 4','journalctl -p warning..alert -b','journalctl -b -p 1..4'],'-p warning уже включает всё более серьёзное.'],
+['l5','Сообщения ядра за текущую загрузку','journalctl -k -b',['journalctl -k','journalctl -b -k','journalctl --dmesg','journalctl -kb'],''],
+['l5','Записи журнала за последние 10 минут','journalctl --since "10 minutes ago"',['journalctl -S "10 minutes ago"','journalctl --since "-10min"'],''],
+['l5','Общее время загрузки системы','systemd-analyze',['systemd-analyze time'],''],
+['l5','15 служб, дольше всех стартовавших при загрузке','systemd-analyze blame | head -15',['systemd-analyze blame | head -n 15','systemd-analyze blame | head -n15'],''],
+['l5','Удалить unit-файл учебной службы','rm /etc/systemd/system/lab5-demo.service',[],'После удаления — daemon-reload и reset-failed.'],
+['l6','Показать блочные устройства с колонками NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS','lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS',['lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT'],'В лабе используется длинный список колонок, включая PATH, LABEL, UUID, MODEL.'],
+['l6','Показать разделы, которые видит ядро (через /proc)','cat /proc/partitions',[],''],
+['l6','Показать, что смонтировано сейчас (через /proc)','cat /proc/mounts',['findmnt'],''],
+['l6','Показать постоянную конфигурацию монтирования','cat /etc/fstab',[],''],
+['l6','Создать таблицу разделов GPT на /dev/sdb без вопросов','parted /dev/sdb --script mklabel gpt',['parted -s /dev/sdb mklabel gpt','parted --script /dev/sdb mklabel gpt'],'Уничтожает таблицу разделов!'],
+['l6','Создать на /dev/sdb раздел ext4 с 1MiB по 1201MiB','parted /dev/sdb --script mkpart primary ext4 1MiB 1201MiB',['parted -s /dev/sdb mkpart primary ext4 1MiB 1201MiB','parted --script /dev/sdb mkpart primary ext4 1MiB 1201MiB'],''],
+['l6','Создать на /dev/sdb раздел swap с 1201MiB до конца диска','parted /dev/sdb --script mkpart primary linux-swap 1201MiB 100%',['parted -s /dev/sdb mkpart primary linux-swap 1201MiB 100%'],''],
+['l6','Попросить ядро перечитать таблицу разделов /dev/sdb','partprobe /dev/sdb',['partprobe'],''],
+['l6','Создать ext4 с меткой LAB6_DATA на /dev/sdb1','mkfs.ext4 -L LAB6_DATA /dev/sdb1',['mkfs -t ext4 -L LAB6_DATA /dev/sdb1'],''],
+['l6','Показать параметры суперблока ext4 на /dev/sdb1 (размер блока, резерв)','tune2fs -l /dev/sdb1',['dumpe2fs -h /dev/sdb1'],''],
+['l6','Создать каталог /mnt/lab6 (с родителями, если нужно)','mkdir -p /mnt/lab6',[],''],
+['l6','Смонтировать /dev/sdb1 в /mnt/lab6','mount /dev/sdb1 /mnt/lab6',['mount -t ext4 /dev/sdb1 /mnt/lab6'],''],
+['l6','Проверить, что смонтировано в /mnt/lab6','findmnt /mnt/lab6',[],''],
+['l6','Показать свободное место и тип ФС для /mnt/lab6','df -hT /mnt/lab6',['df -Th /mnt/lab6'],''],
+['l6','Узнать общий объём содержимого /mnt/lab6','du -sh /mnt/lab6',['du -hs /mnt/lab6'],''],
+['l6','Размонтировать /mnt/lab6','umount /mnt/lab6',['umount /dev/sdb1'],''],
+['l6','Проверить /etc/fstab на ошибки подробно','findmnt --verify --verbose',['findmnt --verify'],''],
+['l6','Смонтировать всё из /etc/fstab, что ещё не смонтировано','mount -a',[],''],
+['l6','Создать swap с меткой LAB6_SWAP на /dev/sdb2','mkswap -L LAB6_SWAP /dev/sdb2',[],''],
+['l6','Включить swap на /dev/sdb2','swapon /dev/sdb2',[],''],
+['l6','Отключить swap на /dev/sdb2','swapoff /dev/sdb2',[],''],
+['l6','Узнать, какие процессы используют /mnt/lab6 (fuser, подробно)','fuser -vm /mnt/lab6',['fuser -mv /mnt/lab6','fuser -m -v /mnt/lab6'],''],
+['l6','То же через lsof: открытые файлы в /mnt/lab6','lsof +D /mnt/lab6',[],''],
+['l6','Проверить ext4 на /dev/sdb1 принудительно, ничего не меняя','e2fsck -f -n /dev/sdb1',['e2fsck -fn /dev/sdb1','e2fsck -nf /dev/sdb1','e2fsck -n -f /dev/sdb1','fsck.ext4 -f -n /dev/sdb1'],'Только на размонтированной ФС.'],
+['l6','Вывести код завершения предыдущей команды','echo $?',[],''],
+['l6','Пометить раздел 1 на /dev/sdc флагом LVM','parted /dev/sdc --script set 1 lvm on',['parted -s /dev/sdc set 1 lvm on'],''],
+['l6','Инициализировать /dev/sdc1 как физический том','pvcreate /dev/sdc1',[],''],
+['l6','Создать группу томов vg_lab6 из /dev/sdc1','vgcreate vg_lab6 /dev/sdc1',[],''],
+['l6','Создать логический том lv_data размером 1 ГБ в vg_lab6','lvcreate -L 1G -n lv_data vg_lab6',['lvcreate -n lv_data -L 1G vg_lab6','lvcreate --size 1G --name lv_data vg_lab6','lvcreate -L1G -n lv_data vg_lab6'],''],
+['l6','Создать ext4 с меткой LVM_DATA на lv_data','mkfs.ext4 -L LVM_DATA /dev/vg_lab6/lv_data',['mkfs.ext4 -L LVM_DATA /dev/mapper/vg_lab6-lv_data'],''],
+['l6','Смонтировать lv_data в /mnt/lvm_lab6','mount /dev/vg_lab6/lv_data /mnt/lvm_lab6',['mount /dev/mapper/vg_lab6-lv_data /mnt/lvm_lab6'],''],
+['l6','Кратко показать физические тома','pvs',[],''],
+['l6','Кратко показать группы томов','vgs',[],''],
+['l6','Кратко показать логические тома','lvs',[],''],
+['l6','Увеличить lv_data на 512 МБ вместе с файловой системой','lvextend -r -L +512M /dev/vg_lab6/lv_data',['lvextend -L +512M -r /dev/vg_lab6/lv_data','lvextend -rL +512M /dev/vg_lab6/lv_data','lvextend --resizefs -L +512M /dev/vg_lab6/lv_data','lvextend -r -L +512M vg_lab6/lv_data'],''],
+['l6','Растянуть ext4 на весь lv_data (если lvextend был без -r)','resize2fs /dev/vg_lab6/lv_data',[],''],
+['l6','Удалить логический том lv_test','lvremove /dev/vg_lab6/lv_test',['lvremove vg_lab6/lv_test'],''],
+['l6','Удалить группу томов vg_lab6','vgremove vg_lab6',[],''],
+['l6','Снять метку PV с /dev/sdc1','pvremove /dev/sdc1',[],''],
+['l6','5 самых больших объектов в /mnt/lab6 через du','du -xah /mnt/lab6 | sort -h | tail -5',['du -ah /mnt/lab6 | sort -h | tail -5','du -xah /mnt/lab6 | sort -h | tail -n 5','du -ah /mnt/lab6 | sort -h | tail -n 5'],'-x — не выходить за пределы файловой системы.'],
+['l6','Получить сведения SMART о /dev/sdb','smartctl -a /dev/sdb',['smartctl --all /dev/sdb','smartctl -i /dev/sdb'],'В ВМ SMART часто недоступен — это результат, а не ошибка.'],
+['l7','Кратко показать интерфейсы (link) и их MAC','ip -br link',['ip -br l','ip -brief link'],''],
+['l7','Показать маршруты IPv4','ip -4 route',['ip -4 r','ip route','ip r','ip route show'],''],
+['l7','Показать маршруты IPv6','ip -6 route',['ip -6 r'],''],
+['l7','Показать таблицу соседей (ARP/NDP)','ip neigh',['ip n','ip neighbor','ip neighbour','ip neigh show'],''],
+['l7','Состояние устройств в NetworkManager','nmcli device status',['nmcli dev status','nmcli d','nmcli device','nmcli d status'],''],
+['l7','Активные соединения NetworkManager','nmcli connection show --active',['nmcli con show --active','nmcli c show --active','nmcli connection show -a'],''],
+['l7','Задать профилю hostonly статический адрес 192.168.56.10/24 (method manual)','nmcli connection modify hostonly ipv4.method manual ipv4.addresses 192.168.56.10/24',[/^nmcli (connection|con|c) (modify|mod) "?hostonly"? (ipv4\.method manual ipv4\.addresses 192\.168\.56\.10\/24|ipv4\.addresses 192\.168\.56\.10\/24 ipv4\.method manual)( .*)?$/],'В лабе дописывают ещё ipv4.gateway "" ipv4.dns "".'],
+['l7','Применить изменённый профиль hostonly','nmcli connection up hostonly',['nmcli con up hostonly','nmcli c up hostonly'],''],
+['l7','Отправить 4 эхо-запроса на 127.0.0.1','ping -c 4 127.0.0.1',['ping -c4 127.0.0.1'],''],
+['l7','Отправить 4 эхо-запроса на соседнюю ВМ 192.168.56.20','ping -c 4 192.168.56.20',['ping -c4 192.168.56.20'],''],
+['l7','Проследить путь до example.com (без root)','tracepath example.com',['traceroute example.com'],''],
+['l7','Показать DNS-серверы и настройки resolver','resolvectl status',['resolvectl','cat /etc/resolv.conf'],''],
+['l7','Разрешить имя example.com системным способом (через nsswitch)','getent ahosts example.com',['getent hosts example.com'],''],
+['l7','Запросить у DNS A-запись example.com','dig example.com A',['dig A example.com','dig example.com'],''],
+['l7','Запросить у DNS AAAA-запись example.com','dig example.com AAAA',['dig AAAA example.com'],''],
+['l7','Обратный DNS-запрос для 1.1.1.1','dig -x 1.1.1.1',['host 1.1.1.1'],''],
+['l7','Слушающие TCP и UDP сокеты, числовые адреса, с процессами','ss -lntup',[/^ss -(?=[lntup]{5}$)(?!.*(.).*\1)[lntup]+$/],''],
+['l7','Установленные TCP-соединения, числа, процессы','ss -tnp',[/^ss -(?=[tnp]{3}$)(?!.*(.).*\1)[tnp]+$/],''],
+['l7','Проверить, слушает ли что-то порт 22','ss -lntp | grep ":22"',['ss -lnt | grep :22','ss -lntp | grep :22','ss -tlnp | grep :22','ss -tln | grep :22'],''],
+['l7','Запустить HTTP-сервер Python на порту 8000 только на адресе 192.168.56.10','python3 -m http.server 8000 --bind 192.168.56.10',['python3 -m http.server --bind 192.168.56.10 8000','python3 -m http.server -b 192.168.56.10 8000','python3 -m http.server 8000 -b 192.168.56.10'],''],
+['l7','С client проверить, открыт ли порт 8000 на 192.168.56.10 (nc)','nc -vz 192.168.56.10 8000',['nc -zv 192.168.56.10 8000','nc -z 192.168.56.10 8000','nc -z -v 192.168.56.10 8000'],''],
+['l7','Получить страницу с подробным выводом заголовков','curl -v http://192.168.56.10:8000/',['curl -v http://192.168.56.10:8000','curl http://192.168.56.10:8000/','curl http://192.168.56.10:8000'],''],
+['l7','Запустить OpenSSH Server и включить автозапуск','systemctl enable --now ssh',[/^systemctl (enable --now|--now enable) (ssh|sshd)(\.service)?$/],'В Debian/Mint служба называется ssh, в Fedora/Manjaro — sshd.'],
+['l7','Создать пару ключей Ed25519','ssh-keygen -t ed25519',[/^ssh-keygen -t ed25519( .*)?$/],'В лабе: ssh-keygen -t ed25519 -a 100 -C "lab7-client".'],
+['l7','Показать отпечаток открытого ключа сервера ed25519','ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub',['ssh-keygen -l -f /etc/ssh/ssh_host_ed25519_key.pub'],'Сравнивают с тем, что ssh показывает при первом входе.'],
+['l7','Передать открытый ключ на student@192.168.56.10','ssh-copy-id student@192.168.56.10',['ssh-copy-id -i ~/.ssh/id_ed25519.pub student@192.168.56.10'],''],
+['l7','Войти на сервер как student','ssh student@192.168.56.10',['ssh -l student 192.168.56.10'],''],
+['l7','Скопировать test.txt в домашний каталог student на 192.168.56.10','scp test.txt student@192.168.56.10:~/',['scp test.txt student@192.168.56.10:~','scp test.txt student@192.168.56.10:'],''],
+['l7','Дать каталогу ~/.ssh правильные права','chmod 700 ~/.ssh',[],''],
+['l7','Дать файлу ~/.ssh/config правильные права','chmod 600 ~/.ssh/config',[],''],
+['l7','Войти через псевдоним lab-server из ~/.ssh/config','ssh lab-server',[],''],
+['l7','Открыть SFTP-сеанс через псевдоним lab-server','sftp lab-server',[],''],
+['l7','Показать эффективную конфигурацию sshd','sshd -T',[],''],
+['l7','Проверить синтаксис конфигурации sshd','sshd -t',[],''],
+['l7','Мягко перечитать конфигурацию ssh без разрыва сеансов','systemctl reload ssh',[/^systemctl reload (ssh|sshd)(\.service)?$/],''],
+['l7','Последние 30 записей журнала ssh без пейджера','journalctl -u ssh -n 30 --no-pager',[/^journalctl -u (ssh|sshd)(\.service)? -n 30( --no-pager)?$/],''],
+['l7','UFW: по умолчанию запретить входящие','ufw default deny incoming',[],''],
+['l7','UFW: по умолчанию разрешить исходящие','ufw default allow outgoing',[],''],
+['l7','UFW: разрешить SSH (TCP 22) только из 192.168.56.0/24','ufw allow from 192.168.56.0/24 to any port 22 proto tcp',['ufw allow from 192.168.56.0/24 to any port 22','ufw allow proto tcp from 192.168.56.0/24 to any port 22'],''],
+['l7','UFW: разрешить TCP 8000 из 192.168.56.0/24','ufw allow from 192.168.56.0/24 to any port 8000 proto tcp',['ufw allow proto tcp from 192.168.56.0/24 to any port 8000'],''],
+['l7','UFW: включить журналирование','ufw logging on',[],''],
+['l7','Включить UFW','ufw enable',[],''],
+['l7','Показать правила UFW с номерами','ufw status numbered',[],''],
+['l7','Удалить правило UFW номер 3','ufw delete 3',[],'Номер берут из ufw status numbered прямо перед удалением.'],
+['l7','Посмотреть итоговые правила nftables','nft list ruleset',[],''],
+['l7','Проверить порт 8000 с таймаутом 3 секунды','nc -vz -w 3 192.168.56.10 8000',['nc -zv -w 3 192.168.56.10 8000','nc -w 3 -vz 192.168.56.10 8000','nc -w 3 -zv 192.168.56.10 8000','nc -vz -w3 192.168.56.10 8000'],''],
+['l7','Найти записи UFW в журнале ядра за последние 5 минут','journalctl -k --since "5 minutes ago" | grep -i UFW',['journalctl -k --since "5 minutes ago" | grep UFW','journalctl -k --since "5 minutes ago" | grep -i ufw'],''],
+['l8','Создать в домашнем каталоге lab8 с подкаталогами bin, data, logs, tmp','mkdir -p ~/lab8/{bin,data,logs,tmp}',['mkdir -p lab8/{bin,data,logs,tmp}'],''],
+['l8','Дать владельцу право выполнять hello.sh','chmod u+x hello.sh',['chmod +x hello.sh','chmod 755 hello.sh','chmod 744 hello.sh','chmod 700 hello.sh'],''],
+['l8','Проверить синтаксис hello.sh, не выполняя его','bash -n hello.sh',[],'В лабе написано bash -n ./*.sh — так bash проверит только первый файл (остальные станут его аргументами). Для всех: for f in *.sh; do bash -n "$f"; done.'],
+['l8','Запустить hello.sh без права выполнения','bash hello.sh',[],''],
+['l8','Запустить hello.sh из текущего каталога как программу','./hello.sh',[],''],
+['l8','Выполнить hello.sh с трассировкой команд','bash -x hello.sh',[],''],
+['l8','Присвоить course значение Linux OS','course="Linux OS"',[],'Без пробелов вокруг =.'],
+['l8','Сделать course доступной дочерним процессам','export course',['export course="Linux OS"','declare -x course'],''],
+['l8','Сделать course неизменяемой','readonly course',['readonly course="Linux OS"','declare -r course'],''],
+['l8','Показать переменные окружения','env',['printenv','export -p'],''],
+['l8','Записать в now дату и время в виде 2026-11-26 10:20:00','now=$(date "+%F %T")',['now=$(date +"%F %T")','now=$(date "+%Y-%m-%d %H:%M:%S")','now=$(date +"%Y-%m-%d %H:%M:%S")'],''],
+['l8','Записать в sum результат 7 + 5 арифметическим раскрытием','sum=$((7 + 5))',['sum=$((7+5))','sum=$(( 7 + 5 ))'],''],
+['l8','Вывести «Курс: …» через printf со значением переменной course','printf "Курс: %s\\n" "$course"',['printf "Курс: %s\\n" $course'],'printf не добавляет перевод строки сам.'],
+['l8','Включить ошибку при обращении к неопределённой переменной','set -u',['set -o nounset'],''],
+['l8','Включить ненулевой код конвейера при ошибке любой команды','set -o pipefail',[],''],
+['l8','Проверить hello.sh статическим анализатором','shellcheck hello.sh',[],''],
+['l8','Вывести код завершения последней команды','echo $?',['printf "Код: %d\\n" "$?"'],''],
+['l8','Ошибки ls /missing записать в logs/stderr.log','ls /missing 2> logs/stderr.log',[],''],
+['l8','Перевести строку в верхний регистр через конвейер: printf "строка\\n" | …','printf "строка\\n" | tr "[:lower:]" "[:upper:]"',['printf "строка\\n" | tr a-z A-Z'],'Кириллицу tr в UTF-8 обычно не переводит — это видно в лабе.'],
+['l9','Создать структуру lab9 с bin, source, backup, restore, logs, state, tmp','mkdir -p lab9/{bin,source,backup,restore,logs,state,tmp}',['mkdir -p ~/lab9/{bin,source,backup,restore,logs,state,tmp}'],''],
+['l9','Создать временный каталог /tmp/lab9.XXXXXX и сохранить путь в tmp_dir','tmp_dir=$(mktemp -d /tmp/lab9.XXXXXX)',['tmp_dir=$(mktemp -d "/tmp/lab9.XXXXXX")','tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/lab9.XXXXXX")'],''],
+['l9','Получить канонический абсолютный путь каталога source','realpath source',['readlink -f source'],''],
+['l9','Записать в stamp время вида 20261126-102000','stamp=$(date "+%Y%m%d-%H%M%S")',['stamp=$(date +"%Y%m%d-%H%M%S")','stamp=$(date +%Y%m%d-%H%M%S)'],''],
+['l9','Упаковать содержимое source (через -C) в full.tar.gz','tar -C source -czf full.tar.gz .',['tar -czf full.tar.gz -C source .','tar czf full.tar.gz -C source .','tar -zcf full.tar.gz -C source .','tar -C source -zcf full.tar.gz .'],'-C меняет каталог, точка — «всё содержимое».'],
+['l9','Показать список файлов в full.tar.gz','tar -tzf full.tar.gz',['tar -tf full.tar.gz','tar tzf full.tar.gz','tar -ztf full.tar.gz','tar tf full.tar.gz'],''],
+['l9','Распаковать full.tar.gz в restore/run1','tar -C restore/run1 -xzf full.tar.gz',['tar -xzf full.tar.gz -C restore/run1','tar xzf full.tar.gz -C restore/run1','tar -xf full.tar.gz -C restore/run1','tar -zxf full.tar.gz -C restore/run1'],''],
+['l9','Посчитать SHA-256 full.tar.gz и сохранить в full.tar.gz.sha256','sha256sum full.tar.gz > full.tar.gz.sha256',[],''],
+['l9','Проверить архив по файлу full.tar.gz.sha256','sha256sum -c full.tar.gz.sha256',['sha256sum --check full.tar.gz.sha256'],''],
+['l9','Инкрементный архив source в inc-1.tar.gz со snapshot-файлом source.snar','tar --listed-incremental=source.snar -C source -czf inc-1.tar.gz .',['tar --listed-incremental=source.snar -czf inc-1.tar.gz -C source .','tar -g source.snar -czf inc-1.tar.gz -C source .','tar -g source.snar -C source -czf inc-1.tar.gz .'],''],
+['l9','Пробный прогон зеркала source/ → backup/mirror/ с удалением лишнего','rsync -a --delete --dry-run source/ backup/mirror/',[/^rsync(?=.* --delete)(?=.* (-a\w*|--archive))(?=.* (-\w*n\w*|--dry-run))( [-\w=]+)+ source\/ backup\/mirror\/?$/],'Сначала всегда --dry-run.'],
+['l9','Синхронизировать зеркало source/ → backup/mirror/ с удалением лишнего','rsync -a --delete source/ backup/mirror/',['rsync --archive --delete source/ backup/mirror/','rsync -av --delete source/ backup/mirror/','rsync -a --delete source/ backup/mirror'],'Слэш в конце source/ — копировать содержимое, а не сам каталог.'],
+['l9','Открыть свой crontab для редактирования','crontab -e',[],''],
+['l9','Показать свой crontab','crontab -l',[],''],
+['l9','Удалить свой crontab целиком','crontab -r',[],''],
+['l9','Проверить, когда сработает OnCalendar=daily','systemd-analyze calendar daily',[],''],
+['l9','Перечитать пользовательские unit-файлы','systemctl --user daemon-reload',[],''],
+['l9','Включить и запустить пользовательский lab9-backup.timer','systemctl --user enable --now lab9-backup.timer',['systemctl --user --now enable lab9-backup.timer'],''],
+['l9','Вручную запустить пользовательскую lab9-backup.service','systemctl --user start lab9-backup.service',[/^systemctl --user start lab9-backup(\.service)?$/],''],
+['l9','Показать пользовательские таймеры','systemctl --user list-timers',['systemctl --user list-timers --all'],''],
+['l9','Журнал пользовательской службы lab9-backup.service','journalctl --user -u lab9-backup.service',[/^journalctl --user -u lab9-backup(\.service)?$/],''],
+['l9','Выключить и отключить пользовательский таймер','systemctl --user disable --now lab9-backup.timer',['systemctl --user --now disable lab9-backup.timer'],''],
+['l9','Проверить синтаксис bin/backup.sh','bash -n bin/backup.sh',[],''],
+['l9','Проверить bin/backup.sh ShellCheck','shellcheck bin/backup.sh',[],''],
+['l10','Показать версии клиента и сервера Docker','docker version',[],''],
+['l10','Подробная информация о Docker (runtime, cgroup driver)','docker info',[],''],
+['l10','Скачать образ alpine версии 3.20','docker pull alpine:3.20',[],'Фиксированная версия вместо latest.'],
+['l10','Метаданные образа alpine:3.20 (digest, архитектура)','docker image inspect alpine:3.20',['docker inspect alpine:3.20'],''],
+['l10','Слои образа alpine:3.20','docker history alpine:3.20',['docker image history alpine:3.20'],''],
+['l10','Одноразовый контейнер alpine:3.20: выполнить uname -a и удалиться','docker run --rm alpine:3.20 uname -a',[],'Покажет ядро хоста — у контейнера нет своего.'],
+['l10','Запустить nginx:1.27-alpine в фоне с именем lab10-nginx, порт хоста 8080 → 80','docker run -d --name lab10-nginx -p 8080:80 nginx:1.27-alpine',[/^docker run(?=.* -d\b)(?=.* --name lab10-nginx)(?=.* -p (127\.0\.0\.1:)?8080:80)( [^ ]+)+ nginx:1\.27-alpine$/],'В лабе ещё --restart unless-stopped --memory 256m --cpus 0.5 и 127.0.0.1:8080:80.'],
+['l10','Список работающих контейнеров','docker ps',['docker container ls'],''],
+['l10','Список всех контейнеров, включая остановленные','docker ps -a',['docker container ls -a','docker ps --all'],''],
+['l10','Однократно показать потребление ресурсов lab10-nginx','docker stats --no-stream lab10-nginx',[],''],
+['l10','Последние 20 строк журнала lab10-nginx','docker logs --tail 20 lab10-nginx',['docker logs -n 20 lab10-nginx'],''],
+['l10','Выполнить id внутри lab10-nginx','docker exec lab10-nginx id',[],''],
+['l10','Открыть интерактивную оболочку sh в lab10-nginx','docker exec -it lab10-nginx sh',['docker exec -ti lab10-nginx sh','docker exec -it lab10-nginx /bin/sh'],''],
+['l10','Подробные сведения о контейнере lab10-nginx','docker inspect lab10-nginx',['docker container inspect lab10-nginx'],''],
+['l10','Изменения файловой системы контейнера lab10-nginx','docker diff lab10-nginx',[],''],
+['l10','Остановить lab10-nginx','docker stop lab10-nginx',[],''],
+['l10','Снова запустить остановленный lab10-nginx','docker start lab10-nginx',[],''],
+['l10','Удалить остановленный lab10-nginx','docker rm lab10-nginx',[],''],
+['l10','Создать именованный том lab10-html','docker volume create lab10-html',[],''],
+['l10','Создать пользовательскую bridge-сеть lab10-net','docker network create lab10-net',['docker network create -d bridge lab10-net','docker network create --driver bridge lab10-net'],''],
+['l10','Из одноразового alpine:3.20 в сети lab10-net получить страницу http://web','docker run --rm --network lab10-net alpine:3.20 wget -qO- http://web',['docker run --network lab10-net --rm alpine:3.20 wget -qO- http://web','docker run --rm --net lab10-net alpine:3.20 wget -qO- http://web'],'Имя web разрешает встроенный DNS сети.'],
+['l10','Собрать образ lab10-web:1.0 из текущего каталога','docker build -t lab10-web:1.0 .',['docker build --pull -t lab10-web:1.0 .','docker build -t lab10-web:1.0 --pull .','docker build --tag lab10-web:1.0 .'],''],
+['l10','Узнать health-статус контейнера lab10-web','docker inspect --format "{{.State.Health.Status}}" lab10-web',['docker inspect -f "{{.State.Health.Status}}" lab10-web'],'','healthy'],
+['l10','Compose: проверить и показать итоговую конфигурацию','docker compose config',[],''],
+['l10','Compose: запустить проект в фоне','docker compose up -d',[],''],
+['l10','Compose: состояние сервисов','docker compose ps',[],''],
+['l10','Compose: последние 30 строк журналов','docker compose logs --tail 30',['docker compose logs --tail=30','docker compose logs -n 30'],''],
+['l10','Compose: остановить и удалить контейнеры, тома сохранить','docker compose down',[],'down -v удалил бы и именованные тома.'],
+['l10','Создать кластер kind с именем lab10','kind create cluster --name lab10',[],''],
+['l10','Узнать текущий контекст kubectl','kubectl config current-context',[],''],
+['l10','Адреса control plane кластера','kubectl cluster-info',[],''],
+['l10','Узлы кластера с подробностями','kubectl get nodes -o wide',['kubectl get nodes','kubectl get no -o wide'],''],
+['l10','Pods во всех namespace','kubectl get pods -A',['kubectl get pods --all-namespaces','kubectl get po -A'],''],
+['l10','Создать namespace lab10','kubectl create namespace lab10',['kubectl create ns lab10'],''],
+['l10','Применить manifest deployment.yaml','kubectl apply -f deployment.yaml',[],''],
+['l10','Создать Service ClusterIP web (80:80) в namespace lab10','kubectl -n lab10 create service clusterip web --tcp=80:80',[kn('create (service|svc) clusterip web --tcp=80:80')],''],
+['l10','Показать deploy, pods, svc и endpoints в namespace lab10','kubectl -n lab10 get deploy,pods,svc,endpoints',[kn('get deploy,pods?,svc,(endpoints|ep)')],''],
+['l10','Пробросить порт 8083 к service/web в namespace lab10','kubectl -n lab10 port-forward service/web 8083:80',[kn('port-forward (service|svc)/web 8083:80')],''],
+['l10','Масштабировать deployment/web в lab10 до 3 реплик','kubectl -n lab10 scale deployment/web --replicas=3',[kn('scale (deployment|deploy)[/ ]web --replicas[ =]3')],''],
+['l10','Удалить pod web-7c9f-abcde в namespace lab10','kubectl -n lab10 delete pod web-7c9f-abcde',[kn('delete (pod|po)[/ ]web-7c9f-abcde')],'Deployment сразу создаст замену.'],
+['l10','Обновить образ контейнера web в deployment/web до nginx:1.27-alpine','kubectl -n lab10 set image deployment/web web=nginx:1.27-alpine',[kn('set image (deployment|deploy)/web web=nginx:1\\.27-alpine')],''],
+['l10','Следить за ходом обновления deployment/web','kubectl -n lab10 rollout status deployment/web',[kn('rollout status (deployment|deploy)[/ ]web')],''],
+['l10','История ревизий deployment/web','kubectl -n lab10 rollout history deployment/web',[kn('rollout history (deployment|deploy)[/ ]web')],''],
+['l10','Откатить deployment/web на предыдущую ревизию','kubectl -n lab10 rollout undo deployment/web',[kn('rollout undo (deployment|deploy)[/ ]web')],''],
+['l10','Подробно описать deployment web (события, реплики)','kubectl -n lab10 describe deployment web',[kn('describe (deployment|deploy)[/ ]web')],''],
+['l10','События namespace lab10, отсортированные по времени создания','kubectl -n lab10 get events --sort-by=.metadata.creationTimestamp',[kn('get events --sort-by[ =]\\.metadata\\.creationTimestamp')],''],
+['l10','Удалить namespace lab10 со всем содержимым','kubectl delete namespace lab10',['kubectl delete ns lab10'],''],
+['l10','Удалить кластер kind lab10','kind delete cluster --name lab10',[],''],
+['lec','Показать список доступных командных оболочек','cat /etc/shells',[],''],
+['lec','Выполнить script.sh в текущей оболочке (переменные останутся)','source script.sh',['. script.sh'],''],
+['lec','Выключить систему через 10 минут с сообщением maintenance','shutdown -h +10 maintenance',['shutdown -h +10 "maintenance"'],''],
+['lec','Создать пользователя ivanov с домашним каталогом и оболочкой /bin/bash','useradd -m -s /bin/bash ivanov',['useradd -s /bin/bash -m ivanov'],''],
+['lec','Добавить ivanov в дополнительную группу wheel, не удаляя из других','usermod -aG wheel ivanov',['usermod -a -G wheel ivanov','usermod -G wheel -a ivanov'],'Без -a пользователь будет удалён из остальных доп. групп.'],
+['lec','Удалить пользователя ivanov вместе с домашним каталогом','userdel -r ivanov',[],''],
+['lec','Создать ext4 на /dev/sdb1 через mkfs с ключом -t','mkfs -t ext4 /dev/sdb1',[],''],
+['lec','Проверить все файловые системы из fstab','fsck -A',[],''],
+['lec','Сбросить кэш на диск','sync',[],''],
+['lec','Смонтировать /dev/sdb1 в /mnt только для чтения','mount -r /dev/sdb1 /mnt',['mount -o ro /dev/sdb1 /mnt'],''],
+['lec','Установить пакет nano-7.2.rpm с индикатором прогресса','rpm -ivh nano-7.2.rpm',[],''],
+['lec','Обновить пакет из nano-7.2.rpm','rpm -Uvh nano-7.2.rpm',[],''],
+['lec','Удалить пакет nano через rpm','rpm -e nano',[],''],
+['lec','Список всех установленных rpm-пакетов','rpm -qa',[],''],
+['lec','Информация о пакете nano','rpm -qi nano',[],''],
+['lec','Список файлов пакета nano','rpm -ql nano',[],''],
+['lec','Проверить все установленные пакеты на изменения','rpm -Va',[],''],
+['lec','История входов пользователей (wtmp)','last',[],''],
+['lec','Последний вход каждого пользователя','lastlog',[],''],
+['lec','Показать очередь печати','lpq',[],''],
+['lec','Удалить все свои задания из очереди печати','lprm -',[],''],
+['lec','Время работы системы из /proc','cat /proc/uptime',[],'']
+];
+
+const OUT=[
+['l1','Файл со сведениями о дистрибутиве','PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"\nNAME="Debian GNU/Linux"\nVERSION_ID="12"\nVERSION="12 (bookworm)"\nVERSION_CODENAME=bookworm\nID=debian\nHOME_URL="https://www.debian.org/"','cat /etc/os-release',['less /etc/os-release'],''],
+['l1','Одно слово про процессор','x86_64','uname -m',['arch'],''],
+['l1','Одна строка про ядро','6.1.0-27-amd64','uname -r',[],''],
+['l1','Fedora','repo id                             repo name\nfedora                              Fedora 41 - x86_64\nupdates                             Fedora 41 - x86_64 - Updates','dnf repolist',['dnf repolist enabled'],''],
+['l1','Alpine','https://dl-cdn.alpinelinux.org/alpine/v3.20/main\nhttps://dl-cdn.alpinelinux.org/alpine/v3.20/community','cat /etc/apk/repositories',[],''],
+['l1','Mint, обновление списков','Hit:1 http://packages.linuxmint.com xia InRelease\nHit:2 http://archive.ubuntu.com/ubuntu noble InRelease\nGet:3 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]\nReading package lists... Done\nBuilding dependency tree... Done\n12 packages can be upgraded. Run \'apt list --upgradable\' to see them.','apt update',['apt-get update'],''],
+['l2','Одной строкой','UEFI','test -d /sys/firmware/efi && echo "UEFI" || echo "Legacy BIOS"',['[ -d /sys/firmware/efi ] && echo "UEFI" || echo "Legacy BIOS"','test -d /sys/firmware/efi && echo UEFI || echo "Legacy BIOS"','[ -d /sys/firmware/efi ] && echo UEFI || echo "Legacy BIOS"','ls /sys/firmware/efi && echo UEFI'],''],
+['l2','Дерево с ФС','NAME   FSTYPE FSVER LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINTS\nsda\n├─sda1 vfat   FAT32       6A1B-2C3D                             412M    19% /boot/efi\n├─sda2 ext4   1.0         3e58f677-deb3-4d1b-a568-739bfd29c536   21G    28% /\n└─sda3 swap   1           477adb1e-f971-4479-9150-63cf6ef8c61f                [SWAP]','lsblk -f',['lsblk --fs'],''],
+['l2','Занятость ФС','Filesystem     Type   Size  Used Avail Use% Mounted on\n/dev/sda2      ext4    30G  8.1G   21G  28% /\n/dev/sda1      vfat   511M  100M  412M  20% /boot/efi\ntmpfs          tmpfs  1.9G     0  1.9G   0% /dev/shm','df -hT',['df -Th','df -h -T'],''],
+['l2','Подкачка','NAME      TYPE      SIZE USED PRIO\n/dev/sda3 partition   2G   0B   -2','swapon --show',[],''],
+['l2','Метаданные разделов','/dev/sda1: UUID="6A1B-2C3D" TYPE="vfat" PARTLABEL="EFI System Partition" PARTUUID="c1a2…"\n/dev/sda2: UUID="3e58f677-deb3-4d1b-a568-739bfd29c536" TYPE="ext4" PARTUUID="d4e5…"\n/dev/sda3: UUID="477adb1e-f971-4479-9150-63cf6ef8c61f" TYPE="swap" PARTUUID="f6a7…"','blkid',[],''],
+['l2','Сводка о машине',' Static hostname: gt-mint\n       Icon name: computer-laptop\n Operating System: Linux Mint 22.1\n          Kernel: Linux 6.8.0-51-generic\n    Architecture: x86-64','hostnamectl',[],''],
+['l2','Адреса кратко','lo               UNKNOWN        127.0.0.1/8 ::1/128\nenp0s3           UP             10.0.2.15/24 fe80::a00:27ff:fe4e:66a1/64','ip -br address',['ip -br a','ip -br addr'],''],
+['l2','Все диски','Disk /dev/sda: 238.47 GiB, 256060514304 bytes, 500118192 sectors\nDisk model: SAMSUNG MZVLB256\nDisklabel type: gpt\n\nDevice         Start       End   Sectors  Size Type\n/dev/sda1       2048   1050623   1048576  512M EFI System\n/dev/sda2    1050624 210765823 209715200  100G Microsoft basic data','fdisk -l',[],'Строка Disklabel type показывает GPT или MBR (dos).'],
+['l2','Контрольная сумма','b3f9a7c1…e02d  linuxmint-22.1-cinnamon-64bit.iso','sha256sum linuxmint-22.1-cinnamon-64bit.iso',[/^sha256sum linuxmint-.*\.iso$/],''],
+['l2','После правки /etc/default/grub (Mint)','Sourcing file `/etc/default/grub\'\nGenerating grub configuration file ...\nFound linux image: /boot/vmlinuz-6.8.0-51-generic\nFound Windows Boot Manager on /dev/sda1@/EFI/Microsoft/Boot/bootmgfw.efi\ndone','update-grub',['grub-mkconfig -o /boot/grub/grub.cfg'],''],
+['l3','Кто я','student','whoami',['id -un','echo $USER'],''],
+['l3','Какая оболочка входа','/bin/bash','echo $SHELL',['echo "$SHELL"'],''],
+['l3','Имя процесса текущей оболочки (через $$)','bash','ps -p $$ -o comm=',[],''],
+['l3','Где я','/home/student/lab3_ivanov','pwd',[],''],
+['l3','Календарь','   September 2026\nSu Mo Tu We Th Fr Sa\n       1  2  3  4  5\n 6  7  8  9 10 11 12\n13 14 15 16 17 18 19\n20 21 22 23 24 25 26\n27 28 29 30','cal 9 2026',['ncal 9 2026','cal 09 2026','cal september 2026'],''],
+['l3','Тип команды','cd is a shell builtin','type cd',[],''],
+['l3','Описание одной строкой','ls (1)               - list directory contents','whatis ls',['man -f ls'],''],
+['l3','Три файла с inode','1311021 -rw-rw-r-- 2 student student 42 Nov 20 10:12 hard_link.txt\n1311021 -rw-rw-r-- 2 student student 42 Nov 20 10:12 source.txt\n1311044 lrwxrwxrwx 1 student student 10 Nov 20 10:13 symbolic_link.txt -> source.txt','ls -li source.txt hard_link.txt symbolic_link.txt',['ls -il source.txt hard_link.txt symbolic_link.txt','ls -li'],'Одинаковый inode и счётчик ссылок 2 — жёсткая ссылка.'],
+['l3','Метаданные файла','  File: notes.txt\n  Size: 128       \tBlocks: 8          IO Block: 4096   regular file\nDevice: 8,2\tInode: 1311050     Links: 1\nAccess: (0664/-rw-rw-r--)  Uid: ( 1000/ student)   Gid: ( 1000/ student)','stat notes.txt',[],''],
+['l3','Тип файла','notes.txt: Unicode text, UTF-8 text','file notes.txt',[],''],
+['l3','Поиск без учёта регистра с номерами строк в documents/file.txt','2:Linux Mint 22.1\n5:установлен linux 6.8\n9:LINUX — ядро','grep -in "linux" documents/file.txt',[/^grep -(in|ni|i -n|n -i) "?linux"? documents\/file\.txt$/],''],
+['l3','Последние 3 команды истории','  498  cd lab3_ivanov\n  499  ls -la\n  500  history 3','history 3',[],''],
+['l3','Количество строк в file.txt','12 file.txt','wc -l file.txt',[],'Если передать через < или конвейер, имя файла не печатается.'],
+['l3','Размер рабочего каталога одним числом','84K\tlab3_ivanov','du -sh lab3_ivanov',['du -sh lab3_ivanov/','du -hs lab3_ivanov'],''],
+['l3','Память','               total        used        free      shared  buff/cache   available\nMem:           3.8Gi       1.2Gi       1.6Gi        32Mi       1.3Gi       2.6Gi\nSwap:          2.0Gi          0B       2.0Gi','free -h',[],''],
+['l3','Что в файле errors.txt после ls /etc /not_exists > output.txt 2> errors.txt','ls: cannot access \'/not_exists\': No such file or directory','cat errors.txt',[],''],
+['l5','Время работы',' 10:21:07 up  2:14,  1 user,  load average: 0.31, 0.22, 0.18','uptime',[],'Три числа load average — за 1, 5 и 15 минут.'],
+['l5','Дерево процессов с PID','systemd(1)─┬─NetworkManager(612)\n           ├─cron(598)\n           ├─sshd(701)\n           └─systemd(1180)───gnome-terminal-(1502)───bash(1523)───pstree(2310)','pstree -p',[],''],
+['l5','Процессы bash с командной строкой','1523 bash\n2077 bash --login','pgrep -a bash',[],''],
+['l5','Задания оболочки с PID','[1]-  2201 Stopped                 sleep 600\n[2]+  2245 Running                 sleep 300 &','jobs -l',[],''],
+['l5','Начало списка','  1) SIGHUP\t 2) SIGINT\t 3) SIGQUIT\t 4) SIGILL\t 5) SIGTRAP\n  6) SIGABRT\t 7) SIGBUS\t 8) SIGFPE\t 9) SIGKILL\t10) SIGUSR1\n 11) SIGSEGV\t12) SIGUSR2\t13) SIGPIPE\t14) SIGALRM\t15) SIGTERM','kill -l',[],''],
+['l5','Столбцы pid, ni, pri, pcpu, cmd для процесса 5120','    PID  NI PRI %CPU CMD\n   5120  15   4 98.7 yes','ps -o pid,ni,pri,pcpu,cmd -p 5120',['ps -p 5120 -o pid,ni,pri,pcpu,cmd'],''],
+['l5','После renice','5120 (process ID) old priority 10, new priority 15','renice 15 -p 5120',['renice -n 15 -p 5120','renice -n 15 5120','renice 15 5120'],''],
+['l5','Каждую секунду, 5 раз','procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----\n r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st\n 2  0      0 1650220  91232 1270400    0    0    12    20  310  520 52  1 47  0  0\n 1  0      0 1649980  91232 1270410    0    0     0     0  298  480 50  0 50  0  0','vmstat 1 5',[],''],
+['l5','Службы с ошибкой','  UNIT               LOAD   ACTIVE SUB    DESCRIPTION\n● lab5-demo.service loaded failed failed Lab 5 demo service\n\n1 loaded units listed.','systemctl --failed',['systemctl list-units --failed','systemctl list-units --state=failed'],''],
+['l5','Состояние cron','● cron.service - Regular background program processing daemon\n     Loaded: loaded (/usr/lib/systemd/system/cron.service; enabled; preset: enabled)\n     Active: active (running) since Thu 2026-11-26 08:07:11 +05; 2h 14min ago\n   Main PID: 598 (cron)','systemctl status cron',[sv('status','cron')],''],
+['l5','Журнал учебной службы','Nov 26 10:30:02 gt-mint systemd[1]: Starting lab5-demo.service - Lab 5 demo service...\nNov 26 10:30:02 gt-mint lab5-demo.sh[3120]: Thu Nov 26 10:30:02 +05 2026 Lab5 demo OK\nNov 26 10:30:02 gt-mint systemd[1]: Finished lab5-demo.service - Lab 5 demo service.','journalctl -u lab5-demo.service',[/^journalctl -u lab5-demo(\.service)?( -n \d+)?( --no-pager)?$/],''],
+['l5','Время загрузки','Startup finished in 4.512s (kernel) + 9.873s (userspace) = 14.385s\ngraphical.target reached after 9.801s in userspace.','systemd-analyze',['systemd-analyze time'],''],
+['l5','Самые медленные службы','4.102s NetworkManager-wait-online.service\n1.233s plymouth-quit-wait.service\n 802ms snapd.seeded.service\n 611ms dev-sda2.device','systemd-analyze blame',[/^systemd-analyze blame( \| head( -n ?\d+| -\d+)?)?$/],''],
+['l5','Проверка процесса 4242 после SIGTERM (процесса больше нет)','    PID TTY          TIME CMD','ps -p 4242',[],'Только заголовок — процесс завершился; код $? будет 1.'],
+['l6','Физические тома','  PV         VG      Fmt  Attr PSize  PFree\n  /dev/sdc1  vg_lab6 lvm2 a--  <3.00g <2.00g','pvs',[],''],
+['l6','Группы томов','  VG      #PV #LV #SN Attr   VSize  VFree\n  vg_lab6   1   1   0 wz--n- <3.00g <2.00g','vgs',[],''],
+['l6','Логические тома','  LV      VG      Attr       LSize Pool Origin Data%  Meta%\n  lv_data vg_lab6 -wi-ao---- 1.00g','lvs',[],''],
+['l6','Что смонтировано в /mnt/lab6','TARGET    SOURCE    FSTYPE OPTIONS\n/mnt/lab6 /dev/sdb1 ext4   rw,relatime','findmnt /mnt/lab6',[],''],
+['l6','Кто держит /mnt/lab6','                     USER        PID ACCESS COMMAND\n/mnt/lab6:           root     kernel mount /mnt/lab6\n                     student    2840 ..c.. bash','fuser -vm /mnt/lab6',['fuser -mv /mnt/lab6'],'c — текущий каталог процесса.'],
+['l6','Попытка размонтировать','umount: /mnt/lab6: target is busy.','umount /mnt/lab6',['umount /dev/sdb1'],''],
+['l6','Проверка ext4 без изменений','e2fsck 1.47.0 (5-Feb-2023)\nPass 1: Checking inodes, blocks, and sizes\nPass 2: Checking directory structure\nPass 3: Checking directory connectivity\nPass 4: Checking reference counts\nPass 5: Checking group summary information\nLAB6_DATA: 13/76800 files (0.0% non-contiguous), 10221/307200 blocks','e2fsck -f -n /dev/sdb1',['e2fsck -fn /dev/sdb1','e2fsck -nf /dev/sdb1','e2fsck -n -f /dev/sdb1'],''],
+['l6','Разделы глазами ядра','major minor  #blocks  name\n\n   8        0   26214400 sda\n   8        1   26213376 sda1\n   8       16    2097152 sdb\n   8       17    1228800 sdb1\n   8       18     867311 sdb2','cat /proc/partitions',[],''],
+['l6','Фрагмент про суперблок','Filesystem volume name:   LAB6_DATA\nFilesystem UUID:          9c1e…\nBlock count:              307200\nReserved block count:     15360\nBlock size:               4096','tune2fs -l /dev/sdb1',['dumpe2fs -h /dev/sdb1'],''],
+['l6','После расширения тома','  Size of logical volume vg_lab6/lv_data changed from 1.00 GiB (256 extents) to 1.50 GiB (384 extents).\n  Logical volume vg_lab6/lv_data successfully resized.\nresize2fs 1.47.0 (5-Feb-2023)\nThe filesystem on /dev/mapper/vg_lab6-lv_data is now 393216 (4k) blocks long.','lvextend -r -L +512M /dev/vg_lab6/lv_data',['lvextend -L +512M -r /dev/vg_lab6/lv_data','lvextend -rL +512M /dev/vg_lab6/lv_data'],''],
+['l7','Интерфейсы и MAC','lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>\nenp0s3           UP             08:00:27:4e:66:a1 <BROADCAST,MULTICAST,UP,LOWER_UP>\nenp0s8           UP             08:00:27:9b:12:c4 <BROADCAST,MULTICAST,UP,LOWER_UP>','ip -br link',['ip -br l'],''],
+['l7','Маршруты IPv4','default via 10.0.2.2 dev enp0s3 proto dhcp metric 100\n10.0.2.0/24 dev enp0s3 proto kernel scope link src 10.0.2.15 metric 100\n192.168.56.0/24 dev enp0s8 proto kernel scope link src 192.168.56.10 metric 101','ip -4 route',['ip route','ip r','ip -4 r'],''],
+['l7','Соседи','10.0.2.2 dev enp0s3 lladdr 52:54:00:12:35:02 REACHABLE\n192.168.56.20 dev enp0s8 lladdr 08:00:27:aa:bb:cc STALE','ip neigh',['ip n','ip neighbor','ip neighbour'],''],
+['l7','NetworkManager','DEVICE  TYPE      STATE                   CONNECTION\nenp0s3  ethernet  connected               Wired connection 1\nenp0s8  ethernet  connected               hostonly\nlo      loopback  connected (externally)  lo','nmcli device status',['nmcli dev status','nmcli d'],''],
+['l7','Слушающие сокеты','Netid State  Recv-Q Send-Q  Local Address:Port   Peer Address:Port Process\nudp   UNCONN 0      0       127.0.0.53%lo:53         0.0.0.0:*     users:(("systemd-resolve",pid=520,fd=13))\ntcp   LISTEN 0      128           0.0.0.0:22          0.0.0.0:*     users:(("sshd",pid=701,fd=3))\ntcp   LISTEN 0      5       192.168.56.10:8000        0.0.0.0:*     users:(("python3",pid=2950,fd=3))','ss -lntup',[/^ss -(?=[lntup]{5}$)(?!.*(.).*\1)[lntup]+$/],''],
+['l7','Пинг соседа','PING 192.168.56.20 (192.168.56.20) 56(84) bytes of data.\n64 bytes from 192.168.56.20: icmp_seq=1 ttl=64 time=0.612 ms\n...\n--- 192.168.56.20 ping statistics ---\n4 packets transmitted, 4 received, 0% packet loss, time 3052ms','ping -c 4 192.168.56.20',['ping -c4 192.168.56.20'],''],
+['l7','Путь до узла',' 1?: [LOCALHOST]                      pmtu 1500\n 1:  _gateway                                              0.512ms\n 2:  192.168.1.1                                           2.104ms\n 3:  no reply\n 4:  93.184.215.14                                        48.930ms reached\n     Resume: pmtu 1500 hops 4 back 4','tracepath example.com',[],'no reply — маршрутизатор не отвечает на ICMP, это нормально.'],
+['l7','Системное разрешение имени','93.184.215.14   STREAM example.com\n93.184.215.14   DGRAM\n93.184.215.14   RAW\n2606:2800:21f:cb07:6820:80da:af6b:8b2c STREAM','getent ahosts example.com',[],''],
+['l7','Ответ DNS','; <<>> DiG 9.18.28 <<>> example.com A\n;; ANSWER SECTION:\nexample.com.\t\t1724\tIN\tA\t93.184.215.14\n\n;; SERVER: 127.0.0.53#53(127.0.0.53) (UDP)','dig example.com A',['dig A example.com'],''],
+['l7','Проверка порта с client','Connection to 192.168.56.10 8000 port [tcp/*] succeeded!','nc -vz 192.168.56.10 8000',['nc -zv 192.168.56.10 8000'],''],
+['l7','После удаления правила 8000','nc: connect to 192.168.56.10 port 8000 (tcp) timed out: Operation now in progress','nc -vz -w 3 192.168.56.10 8000',['nc -zv -w 3 192.168.56.10 8000','nc -w 3 -vz 192.168.56.10 8000'],'Пакет отброшен экраном — поэтому таймаут, а не «refused».'],
+['l7','Правила экрана с номерами','Status: active\n\n     To                         Action      From\n     --                         ------      ----\n[ 1] 22/tcp                     ALLOW IN    192.168.56.0/24\n[ 2] 8000/tcp                   ALLOW IN    192.168.56.0/24','ufw status numbered',[],''],
+['l7','Фрагмент эффективной конфигурации','permitrootlogin no\npasswordauthentication yes\npermitemptypasswords no','sshd -T | grep -E "permitrootlogin|passwordauthentication|permitemptypasswords"',['sshd -T | grep -E "permitrootlogin|passwordauthentication|permitemptypasswords"','sshd -T | egrep "permitrootlogin|passwordauthentication|permitemptypasswords"'],'Ключи в выводе sshd -T всегда в нижнем регистре.'],
+['l7','Отпечаток ключа сервера','256 SHA256:Xq1v9Jb…kP0 root@server (ED25519)','ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub',['ssh-keygen -l -f /etc/ssh/ssh_host_ed25519_key.pub'],''],
+['l8','Проверка синтаксиса сломанного скрипта','hello.sh: line 7: syntax error: unexpected end of file','bash -n hello.sh',[],'Чаще всего — не закрыт if/fi или do/done.'],
+['l9','Проверка контрольной суммы','backup/full-20261126-102000.tar.gz: OK','sha256sum -c backup/full-20261126-102000.tar.gz.sha256',[/^sha256sum (-c|--check) backup\/full-20261126-102000\.tar\.gz\.sha256$/],''],
+['l9','То же после порчи архива','backup/full-20261126-102000.tar.gz: FAILED\nsha256sum: WARNING: 1 computed checksum did NOT match','sha256sum -c backup/full-20261126-102000.tar.gz.sha256',[/^sha256sum (-c|--check) backup\/full-20261126-102000\.tar\.gz\.sha256$/],''],
+['l9','Список содержимого full.tar.gz','./\n./notes.txt\n./docs/\n./docs/plan.md\n./.hidden\n./link -> notes.txt','tar -tzf full.tar.gz',['tar -tf full.tar.gz','tar tzf full.tar.gz','tar -ztf full.tar.gz','tar -tvzf full.tar.gz'],''],
+['l9','Пробный прогон зеркала','*deleting   old.txt\n>f+++++++++ new.txt\n>f.st...... notes.txt','rsync -a --delete --dry-run --itemize-changes source/ backup/mirror/',[/^rsync(?=.* --delete)(?=.* (-\w*n\w*|--dry-run))(?=.* (-\w*i\w*|--itemize-changes))( [-\w=]+)+ source\/ backup\/mirror\/?$/],'--itemize-changes (-i) печатает такие строки.'],
+['l9','Мой crontab','SHELL=/bin/bash\nPATH=/usr/local/bin:/usr/bin:/bin\n15 14 * * * /home/student/lab9/bin/backup.sh -s /home/student/lab9/source -d /home/student/lab9/backup full >> /home/student/lab9/logs/cron.log 2>&1','crontab -l',[],''],
+['l9','Разбор календарного выражения','  Original form: daily\nNormalized form: *-*-* 00:00:00\n    Next elapse: Fri 2026-11-27 00:00:00 +05\n       From now: 13h left','systemd-analyze calendar daily',[],''],
+['l9','Пользовательские таймеры','NEXT                        LEFT LAST PASSED UNIT              ACTIVATES\nFri 2026-11-27 00:03:12 +05  13h -    -      lab9-backup.timer lab9-backup.service\n\n1 timers listed.','systemctl --user list-timers',['systemctl --user list-timers --all'],''],
+['l9','Второй запуск backup.sh, пока первый работает','Копирование уже выполняется','./bin/backup.sh -s source -d backup full',[/^(\.\/)?(bin\/)?backup\.sh( .*)?$/,/^bash (\.\/)?(bin\/)?backup\.sh( .*)?$/],'Сообщение из ветки flock -n 9 || …; код завершения 75.'],
+['l10','Работающие контейнеры','CONTAINER ID   IMAGE               COMMAND                  STATUS         PORTS                    NAMES\n4c1a9e7d2b10   nginx:1.27-alpine   "/docker-entrypoint.…"   Up 2 minutes   127.0.0.1:8080->80/tcp   lab10-nginx','docker ps',['docker container ls'],''],
+['l10','Ресурсы контейнера однократно','CONTAINER ID   NAME          CPU %     MEM USAGE / LIMIT   MEM %\n4c1a9e7d2b10   lab10-nginx   0.00%     3.9MiB / 256MiB     1.52%','docker stats --no-stream lab10-nginx',['docker stats --no-stream'],''],
+['l10','Изменения ФС контейнера','C /etc\nC /etc/nginx/conf.d\nC /var/cache/nginx\nA /var/cache/nginx/client_temp\nC /run\nA /run/nginx.pid','docker diff lab10-nginx',[],'A — добавлено, C — изменено, D — удалено.'],
+['l10','Внутри контейнера','uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon)','docker exec lab10-nginx id',[],''],
+['l10','Из соседнего контейнера в сети lab10-net','LAB 10','docker run --rm --network lab10-net alpine:3.20 wget -qO- http://web',['docker run --network lab10-net --rm alpine:3.20 wget -qO- http://web'],''],
+['l10','Health-статус lab10-web','healthy','docker inspect --format "{{.State.Health.Status}}" lab10-web',['docker inspect -f "{{.State.Health.Status}}" lab10-web'],''],
+['l10','Compose-сервисы','NAME             IMAGE              SERVICE   STATUS                  PORTS\nlab10-redis-1    redis:7.4-alpine   redis     Up 30 seconds (healthy)\nlab10-web-1      lab10-web:1.0      web       Up 25 seconds (healthy)  127.0.0.1:8082->8080/tcp','docker compose ps',[],''],
+['l10','Узлы кластера','NAME                  STATUS   ROLES           AGE   VERSION   INTERNAL-IP\nlab10-control-plane   Ready    control-plane   3m    v1.31.0   172.18.0.2','kubectl get nodes -o wide',['kubectl get nodes'],''],
+['l10','Объекты namespace lab10','NAME                  READY   UP-TO-DATE   AVAILABLE   AGE\ndeployment.apps/web   2/2     2            2           1m\n\nNAME                       READY   STATUS    RESTARTS   AGE\npod/web-6d4cf56db6-8kq2x   1/1     Running   0          1m\npod/web-6d4cf56db6-tz7lp   1/1     Running   0          1m\n\nNAME          TYPE        CLUSTER-IP     PORT(S)\nservice/web   ClusterIP   10.96.144.20   80/TCP','kubectl -n lab10 get deploy,pods,svc',[kn('get deploy,pods?,svc(,endpoints|,ep)?'),kn('get all')],''],
+['l10','Ход обновления','Waiting for deployment "web" rollout to finish: 1 out of 3 new replicas have been updated...\nWaiting for deployment "web" rollout to finish: 2 out of 3 new replicas have been updated...\ndeployment "web" successfully rolled out','kubectl -n lab10 rollout status deployment/web',[kn('rollout status (deployment|deploy)[/ ]web')],''],
+['l10','Ревизии','deployment.apps/web\nREVISION  CHANGE-CAUSE\n1         <none>\n2         <none>\n3         <none>','kubectl -n lab10 rollout history deployment/web',[kn('rollout history (deployment|deploy)[/ ]web')],''],
+['l10','Сбой после обновления на несуществующий тег','NAME                   READY   STATUS             RESTARTS   AGE\nweb-7f9c8d6b5-x2lmn    0/1     ImagePullBackOff   0          40s\nweb-6d4cf56db6-8kq2x   1/1     Running            0          12m','kubectl -n lab10 get pods',[kn('get (pods|po)'),kn('get (pods|po) -o wide')],'Старые pods продолжают работать — дальше rollout undo.'],
+['lec','Список оболочек','# /etc/shells: valid login shells\n/bin/sh\n/bin/bash\n/usr/bin/bash\n/bin/dash\n/usr/bin/zsh','cat /etc/shells',[],''],
+['lec','История входов','student  tty2         tty2             Thu Nov 26 08:07   still logged in\nreboot   system boot  6.8.0-51-generic Thu Nov 26 08:06   still running\n\nwtmp begins Mon Nov  2 09:14:33 2026','last',[],''],
+['lec','Время работы из /proc (секунды работы и простоя)','8040.12 30544.87','cat /proc/uptime',[],'']
+];
+
+const PRED=[
+['l8','course=\'Linux OS\'\nprintf \'Курс: %s\\n\' "$course"\nprintf \'Буквально: %s\\n\' \'$course\'','Курс: Linux OS\nБуквально: $course','В одинарных кавычках $ не раскрывается.'],
+['l8','echo "$((7 + 5)) $((17 / 5)) $((17 % 5))"','12 3 2','Арифметика bash целочисленная.'],
+['l8','a=5\nb=a\necho $b ${b} "$a$b"','a a 5a',''],
+['l8','name="Ivan"\necho \'Привет, $name\' "Привет, $name"','Привет, $name Привет, Ivan',''],
+['l8','x=10\nbash -c \'echo "child: [$x]"\'\nexport x\nbash -c \'echo "child: [$x]"\'','child: []\nchild: [10]','Дочерний процесс видит только экспортированные переменные.'],
+['l8','# запуск: ./args.sh "Анна Мария" 2 3\necho "$#"\nfor arg in "$@"; do printf \'<%s>\\n\' "$arg"; done','3\n<Анна Мария>\n<2>\n<3>','"$@" сохраняет пробел внутри первого параметра.'],
+['l8','# запуск: ./args.sh "Анна Мария" 2\nfor arg in $*; do printf \'<%s>\\n\' "$arg"; done','<Анна>\n<Мария>\n<2>','Без кавычек $* разрезает по пробелам.'],
+['l8','f() { local v=inner; echo "$v"; }\nv=outer\nf\necho "$v"','inner\nouter','local не трогает глобальную переменную.'],
+['l8','for i in 1 2 3 4 5 6; do\n  [ $i -eq 3 ] && continue\n  [ $i -eq 5 ] && break\n  echo $i\ndone','1 2 4','continue пропускает 3, break выходит на 5.'],
+['l8','i=1\nwhile [ $i -le 10 ]; do\n  echo $i\n  i=$((i * 3))\ndone','1 3 9',''],
+['l8','commands=(date uname whoami)\ncommands+=(printf)\necho ${#commands[@]}\necho ${!commands[@]}','4\n0 1 2 3','${#…} — количество, ${!…} — индексы.'],
+['l8','commands=(date uname whoami printf)\nunset \'commands[1]\'\necho ${#commands[@]} ${!commands[@]}\necho "${commands[@]}"','3 0 2 3\ndate whoami printf','После unset индексы не перенумеровываются.'],
+['l8','arr=(a b c d e)\necho ${arr[2]} ${arr[-1]} ${arr[@]:1:2}','c e b c',''],
+['l8','op=mul\ncase $op in\n  add) echo $((6+3)) ;;\n  mul) echo $((6*3)) ;;\n  *) echo "?" ;;\nesac','18',''],
+['l8','set -- -h\ncase ${1:-} in\n  start|stop|status) echo "Команда: $1" ;;\n  -h|--help) echo "Допустимо: start, stop, status" ;;\n  *) echo "Неизвестная команда" ;;\nesac','Допустимо: start, stop, status','Пример из методички лабы 8.'],
+['l8','ls /nonexistent 2>/dev/null\necho $?\ntrue; echo $?\nfalse; echo $?','2\n0\n1','ls для отсутствующего пути возвращает 2.'],
+['l8','false | true\necho $?\nset -o pipefail\nfalse | true\necho $?','0\n1','pipefail учитывает ошибку любой команды конвейера.'],
+['l8','v=""\n[[ -z $v ]] && echo empty\n[[ -n $v ]] || echo "not set"','empty\nnot set',''],
+['l8','n=15\nif (( n > 10 )); then echo big; elif (( n > 5 )); then echo mid; else echo small; fi','big',''],
+['l8','printf \'%s | %d байт\\n\' notes.txt 128\nprintf \'%05.1f\\n\' 3.14159','notes.txt | 128 байт\n003.1','%05.1f — ширина 5, одна цифра после точки, дополнение нулями.'],
+['l8','printf \'строка\\n\' | tr \'[:lower:]\' \'[:upper:]\'\nprintf \'linux\\n\' | tr \'[:lower:]\' \'[:upper:]\'','строка\nLINUX','В лабе этот пример с кириллицей: GNU tr работает побайтно и русские буквы не переводит.'],
+['l9','path=/home/student/lab9/bin/backup.sh\necho ${path##*/} ${path%/*}','backup.sh /home/student/lab9/bin','## — удалить самый длинный префикс по шаблону, % — кратчайший суффикс.'],
+['l9','f=full-20261126-102000.tar.gz\necho ${f%.tar.gz} ${f#full-}','full-20261126-102000 20261126-102000.tar.gz',''],
+['l9','unset dir\necho "${dir:-/tmp}" "[${dir}]"\n: "${dir:=/var}"\necho "$dir"','/tmp []\n/var',':- подставляет значение, := ещё и присваивает.'],
+['l9','set -- -s src -n full\nwhile getopts \':s:d:n\' opt; do\n  case $opt in\n    s) echo "src=$OPTARG" ;;\n    n) echo dry ;;\n  esac\ndone\nshift $((OPTIND - 1))\necho "mode=$1"','src=src\ndry\nmode=full',''],
+['l9','set -- -x\nwhile getopts \':s:\' opt; do\n  case $opt in\n    s) echo ok ;;\n    :) echo "Нет аргумента у -$OPTARG" ;;\n    ?) echo "Неизвестная опция -$OPTARG" ;;\n  esac\ndone','Неизвестная опция -x','В тихом режиме неизвестная опция попадает в ветку ? и лежит в OPTARG.'],
+['l9','set -- -s\nwhile getopts \':s:\' opt; do\n  case $opt in\n    s) echo ok ;;\n    :) echo "Нет аргумента у -$OPTARG" ;;\n    ?) echo "Неизвестная опция -$OPTARG" ;;\n  esac\ndone','Нет аргумента у -s',''],
+['l9','archives=(f5 f4 f3 f2 f1)\nkeep=3\necho "${archives[@]:keep}"','f2 f1','Срез с индекса keep — кандидаты на удаление при ротации.'],
+['l9','cleanup() { echo "cleanup rc=$?"; }\ntrap cleanup EXIT\necho work\nexit 3','work\ncleanup rc=3','EXIT-обработчик видит код завершения.'],
+['l9','echo "a b" > /tmp/t.txt\nmapfile -t lines < <(printf \'%s\\n\' x y z)\necho ${#lines[@]} ${lines[1]}','3 y',''],
+['lec','for i in 1 2 3; do echo -n "$i "; done\necho\nn=3\nuntil [ $n -eq 0 ]; do echo -n "$n "; n=$((n-1)); done\necho','1 2 3\n3 2 1','until выполняется, пока условие ложно.'],
+['lec','a=7; b=10\n[ $a -lt $b ] && echo lt\n[ $a -ge $b ] && echo ge\n[ $a -ne $b ] && echo ne','lt\nne',''],
+['lec','function greet {\n  echo "Привет, $1 и $2"\n}\ngreet Аня Оля','Привет, Аня и Оля','Параметры функции — $1, $2…, как у скрипта.'],
+['lec','declare -i n=5\nn=n+3\necho $n\nreadonly PI=3\n( PI=4 ) 2>/dev/null || echo "нельзя"','8\nнельзя','declare -i делает арифметику при присваивании; readonly-переменную изменить нельзя (пробуем в подоболочке, чтобы скрипт не прервался).']
+];
+
+const FILL=[
+['l8','▮▮▮\n# Автор: Турдалиева Г.\nprintf \'Привет, %s!\\n\' "$USER"','#!/usr/bin/env bash',['#!/bin/bash'],'Shebang из лабы 8.'],
+['l8','if (( $# ▮▮▮ 1 )); then\n  printf \'Использование: %s <имя>\\n\' "$0" >&2\n  exit 2\nfi','<',[],'В (( )) работают обычные < > ==.'],
+['l8','if [ $# -lt 1 ]; then\n  echo "Нет параметра" ▮▮▮\n  exit 2\nfi','>&2',['1>&2'],'Сообщение об ошибке — в stderr.'],
+['l8','path=${1:-}\nif [[ -z $path ]]; then echo "не задан"\nelif [[ ▮▮▮ $path ]]; then echo "Символическая ссылка"\nelif [[ -f $path ]]; then echo "Обычный файл"\nfi','-L',['-h'],'Ссылку проверяют первой: -f и -d следуют по ссылке.'],
+['l8','# каталог?\nif [[ ▮▮▮ $path ]]; then echo "Каталог"; fi','-d',[],''],
+['l8','# доступен для записи?\n[[ ▮▮▮ $path ]] && echo "можно писать"','-w',[],'-r — чтение, -x — выполнение, -e — существует.'],
+['l8','read -rp "Возраст: " age\nif [[ ! $age =~ ▮▮▮ ]]; then\n  echo "Не число" >&2; exit 1\nfi','^[0-9]+$',[],''],
+['l8','read -rp "Имя: " name\nif [[ ▮▮▮ $name ]]; then echo "Пусто" >&2; exit 1; fi','-z',[],''],
+['l8','case $op in\n  add) r=$((a + b)) ;;\n  div) (( b == 0 )) && { echo "деление на ноль" >&2; exit 3; }\n       r=$((a / b)) ;;\n  *) echo "неизвестная операция" >&2; exit 2 ▮▮▮\nesac',';;',[],''],
+['l8','shopt -s nullglob\nfor file in "${1:-.}"/*; do\n  [[ -f $file ]] || ▮▮▮\n  printf \'%s\\n\' "$file"\ndone','continue',[],''],
+['l8','lines=$(wc -l ▮▮▮ "$file")\n# нужно только число, без имени файла','<',[],''],
+['l8','size=$(stat -c ▮▮▮ "$file")   # размер в байтах','"%s"',['%s'],''],
+['l8','while IFS= read -r -d \'\' file; do\n  printf \'%s\\n\' "$file"\ndone < <(find . -maxdepth 1 -type f ▮▮▮)','-print0',[],'Имена разделяются нулевым байтом — пробелы не страшны.'],
+['l8','log_message() {\n  ▮▮▮ level=${1:?уровень не задан}\n  shift\n  printf \'%s [%s] %s\\n\' "$(date \'+%F %T\')" "$level" "$*" >> logs/lab8.log\n}','local',[],''],
+['l8','commands=(date uname whoami)\ncommands▮▮▮(printf)   # добавить элемент','+=',[],''],
+['l8','for cmd in ▮▮▮; do echo "$cmd"; done   # все элементы массива commands','"${commands[@]}"',[],''],
+['l8','echo "Элементов: ▮▮▮"   # количество элементов массива commands','${#commands[@]}',['${#commands[*]}'],''],
+['l8','for i in ▮▮▮; do echo $i; done   # числа 1..10 через раскрытие скобок','{1..10}',['$(seq 1 10)','$(seq 10)'],''],
+['l8','for (( i=1; i▮▮▮10; i++ )); do echo $i; done   # 1..10 включительно','<=',[],''],
+['l9','while getopts \'▮▮▮\' opt; do   # тихий режим; -s, -d, -k с аргументом; -n и -h без\n  case $opt in ... esac\ndone',':s:d:k:nh',[],''],
+['l9','while getopts \':s:d:\' opt; do\n  case $opt in\n    s) source_dir=▮▮▮ ;;\n  esac\ndone','$OPTARG',['"$OPTARG"'],''],
+['l9','done\nshift ▮▮▮\nmode=${1:-}','$((OPTIND - 1))',['$((OPTIND-1))'],''],
+['l9','tmp_dir=$(mktemp ▮▮▮ "${TMPDIR:-/tmp}/lab9.XXXXXX") || exit 1','-d',[],''],
+['l9','cleanup() { local rc=$?; rm -rf -- "$tmp_dir"; exit "$rc"; }\ntrap cleanup ▮▮▮','EXIT INT TERM',['EXIT TERM INT','INT TERM EXIT','EXIT'],''],
+['l9','exec 9> "$backup_dir/.backup.lock"\n▮▮▮ -n 9 || { echo "Копирование уже выполняется" >&2; exit 75; }','flock',[],''],
+['l9','log() { printf \'%s [%s] pid=%d %s\\n\' "$(date \'+%F %T\')" "$1" "$$" "$2" | ▮▮▮ -a logs/backup.log; }','tee',[],'tee пишет и на экран, и в файл.'],
+['l9','tar -C "$source_dir" ▮▮▮ "$tmp_archive" . || exit 10   # создать gzip-архив','-czf',['-zcf','czf'],''],
+['l9','tar ▮▮▮ "$tmp_archive" >/dev/null || exit 11   # проверить, что архив читается','-tzf',['-tf','tzf'],''],
+['l9','sha256sum "$archive" > "$archive.sha256"\nsha256sum ▮▮▮ "$archive.sha256"','-c',['--check'],''],
+['l9','tar --listed-incremental=▮▮▮ -C "$source_dir" -czf "$backup_dir/inc-$stamp.tar.gz" .','"$snapshot"',['$snapshot'],''],
+['l9','rsync -a --delete ▮▮▮ --itemize-changes "$source_dir/" "$backup_dir/mirror/"   # ничего не менять','--dry-run',['-n'],''],
+['l9','# каждый день в 14:15\n▮▮▮ /home/student/lab9/bin/backup.sh full >> /home/student/lab9/logs/cron.log 2>&1','15 14 * * *',[],'минута час день месяц день_недели'],
+['l9','# каждые 15 минут\n▮▮▮ /home/student/lab9/bin/backup.sh full','*/15 * * * *',['0,15,30,45 * * * *'],''],
+['l9','# по будням в 18:30\n▮▮▮ /home/student/lab9/bin/backup.sh full','30 18 * * 1-5',['30 18 * * mon-fri'],''],
+['l9','[Timer]\nOnCalendar=daily\n▮▮▮\nRandomizedDelaySec=5m','Persistent=true',[],''],
+['l9','[Install]\nWantedBy=▮▮▮   # для таймера','timers.target',[],''],
+['l5','[Service]\nType=oneshot\n▮▮▮=/usr/local/bin/lab5-demo.sh','ExecStart',[],''],
+['l5','[Install]\nWantedBy=▮▮▮   # для обычной системной службы','multi-user.target',[],''],
+['l5','trap \'echo Завершение; rm -f /tmp/lab5.$$; exit 0\' ▮▮▮   # Ctrl+C, SIGTERM, SIGHUP','INT TERM HUP',['INT HUP TERM','TERM INT HUP','HUP INT TERM','SIGINT SIGTERM SIGHUP'],''],
+['l5','sleep 600 &\npid1=▮▮▮   # PID последнего фонового процесса','$!',[],''],
+['l6','# /etc/fstab: ext4 по UUID, не мешать загрузке без диска\nUUID=9c1e… /mnt/lab6 ext4 ▮▮▮ 0 2','defaults,nofail',['nofail,defaults'],''],
+['l6','# /etc/fstab: swap по UUID\nUUID=477a… none swap ▮▮▮ 0 0','sw,nofail',['sw','defaults','defaults,nofail'],''],
+['l7','Host lab-server\n    ▮▮▮ 192.168.56.10\n    User student\n    IdentityFile ~/.ssh/id_ed25519','HostName',['Hostname'],''],
+['l7','# /etc/ssh/sshd_config.d/90-lab7.conf\n▮▮▮ no\nPermitEmptyPasswords no','PermitRootLogin',[],''],
+['l10','FROM nginxinc/nginx-unprivileged:1.27-alpine\nCOPY --chown=101:101 index.html /usr/share/nginx/html/index.html\n▮▮▮ --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1\nEXPOSE 8080\nUSER 101','HEALTHCHECK',[],''],
+['l10','FROM nginxinc/nginx-unprivileged:1.27-alpine\nEXPOSE 8080\n▮▮▮ 101   # запуск не от root','USER',[],''],
+['l10','services:\n  web:\n    depends_on:\n      redis: {condition: ▮▮▮}','service_healthy',[],'Без condition depends_on задаёт только порядок, а не готовность.'],
+['l10','spec:\n  ▮▮▮: 2\n  selector: {matchLabels: {app: web}}','replicas',[],''],
+['l10','readinessProbe: {httpGet: {path: /, port: 80}, initialDelaySeconds: 2}\n▮▮▮: {httpGet: {path: /, port: 80}, initialDelaySeconds: 10}   # перезапуск зависшего','livenessProbe',[],''],
+['lec','#!/bin/bash ▮▮▮   # режим отладки','-x',[],''],
+['lec','echo ${fruits▮▮▮}   # весь массив fruits','[*]',['[@]'],''],
+['lec','until [ $n ▮▮▮ 0 ]; do n=$((n-1)); done   # пока n не станет равно 0','-eq',[],'']
+];
+/*END*/
+
+const KIND={mc:'тест',cmd:'напиши команду',out:'команда по выводу',pred:'что выведет',fill:'дополни скрипт'};
+const items=[];
+MC.forEach((m,i)=>items.push({id:'m'+i,type:'mc',topic:m[0],q:m[1],opts:m[2],ex:m[3]}));
+CMD.forEach((c,i)=>items.push({id:'c'+i,type:'cmd',topic:c[0],q:c[1],ans:c[2],acc:c[3],ex:c[4]||'',out:c[5]||''}));
+OUT.forEach((o,i)=>items.push({id:'o'+i,type:'out',topic:o[0],hint:o[1],screen:o[2],ans:o[3],acc:o[4],ex:o[5]||''}));
+PRED.forEach((p,i)=>items.push({id:'p'+i,type:'pred',topic:p[0],code:p[1],ans:p[2],ex:p[3]||''}));
+FILL.forEach((f,i)=>items.push({id:'f'+i,type:'fill',topic:f[0],code:f[1],ans:f[2],acc:f[3],ex:f[4]||''}));
+const byId=Object.fromEntries(items.map(x=>[x.id,x]));
+
+const quotes=s=>s.replace(/[‘’]/g,"'").replace(/[“”«»]/g,'"').replace(/'/g,'"');
+const redir=s=>s.replace(/(\d?>>?|<) +/g,'$1');
+const norm=s=>redir(quotes(s).trim().replace(/^[$#] +/,'').replace(/^sudo +/,'').replace(/\s+/g,' ').replace(/ *;$/,'').trim());
+const normF=s=>redir(quotes(s).trim().replace(/\s+/g,' '));
+const toks=s=>s.trim().split(/\s+/).join(' ');
+function correct(it,v){
+ if(it.type==='pred') return toks(v)===toks(it.ans);
+ if(it.type==='fill') return [it.ans,...it.acc].some(a=>normF(a)===normF(v));
+ const n=norm(v); if(!n) return false;
+ return [it.ans,...it.acc].some(a=>a instanceof RegExp?a.test(n):norm(a)===n);
+}
+
+const $=q=>document.querySelector(q);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const K='linux-trainer-labs-v1';
+let store={};
+try{store=JSON.parse(localStorage.getItem(K)||'{}')||{}}catch(e){store={}}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(store))}catch(e){}};
+
+const S={mode:'all',topics:new Set(Object.keys(T)),pool:[],i:0,right:0,answered:0,streak:0,wrong:[],done:false,good:false,gave:false,val:'',order:[],pick:-1,err:''};
+
+$('#sub').textContent='Тренажёр по лабораторным 1–10 · '+items.length+' заданий: команды, вывод терминала, Bash и тест';
+
+function inMode(it){
+ if(!S.topics.has(it.topic)) return false;
+ if(S.mode==='all') return true;
+ if(S.mode==='bash') return it.type==='pred'||it.type==='fill';
+ return it.type===S.mode;
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function start(onlyWrong){
+ let ids=items.filter(onlyWrong?(it=>store[it.id]===0):inMode).map(x=>x.id);
+ shuffle(ids);
+ const n=+$('#len').value; if(n&&!onlyWrong) ids=ids.slice(0,n);
+ Object.assign(S,{pool:ids,i:0,right:0,answered:0,streak:0,wrong:[]});
+ fresh(); render(); stats();
+}
+function fresh(){
+ Object.assign(S,{done:false,good:false,gave:false,val:'',pick:-1,err:''});
+ const it=byId[S.pool[S.i]];
+ S.order=it&&it.type==='mc'?shuffle([0,1,2,3]):[];
+}
+
+function inputLine(it){
+ const v=esc(S.val),dis=S.done?' disabled':'';
+ if(it.type==='pred') return `<label class="cm" for="ans">Вывод:</label><textarea id="ans" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off"${dis}>${v}</textarea>`;
+ const ph=it.type==='fill'?'то, что вместо ▮▮▮':'команда';
+ return `<div class="ln"><span class="ps"><b>student@linux</b>:<i>~</i>$</span><input id="ans" type="text" value="${v}" placeholder="${ph}" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Ответ"${dis}></div>`;
+}
+function verdict(it){
+ let v=`<div class="vd ${S.good?'ok':'no'}"><p class="vt">${S.good?'✓ Верно':S.gave?'Правильный ответ':'✗ Неверно'}</p>`;
+ if(it.type==='pred') v+=`<p>Ожидаемый вывод:</p><pre class="scr">${esc(it.ans)}</pre>`;
+ else if(it.type!=='mc') v+=`<p>Ответ: <code>${esc(it.ans)}</code></p>`;
+ const alts=(it.acc||[]).filter(a=>typeof a==='string');
+ if(alts.length) v+=`<p class="alt">Тоже засчитывается: ${alts.map(a=>'<code>'+esc(a)+'</code>').join(', ')}</p>`;
+ if(it.ex) v+=`<p>${esc(it.ex)}</p>`;
+ if(it.type==='cmd'&&it.out) v+=`<pre class="scr">$ ${esc(it.ans)}\n${esc(it.out)}</pre>`;
+ return v+'</div>';
+}
+function render(){
+ const scr=$('#screen');
+ if(!S.pool.length){
+  scr.innerHTML='<p class="cm"># пусто</p><p class="q">Под эти фильтры нет заданий. Включите темы или выберите другой режим.</p>';
+  $('#cnt').textContent='0 / 0';$('#pbar').style.width='0';btns(true);return;
+ }
+ if(S.i>=S.pool.length) return end();
+ const it=byId[S.pool[S.i]];
+ $('#cnt').textContent=(S.i+1)+' / '+S.pool.length;
+ $('#pbar').style.width=(S.i/S.pool.length*100)+'%';
+ let h=`<p class="cm"># ${esc(T[it.topic])} · ${KIND[it.type]}</p>`;
+ if(it.type==='mc'){
+  h+=`<p class="q">${it.q}</p><div class="opts">`+S.order.map((k,j)=>{
+   let c='opt'; if(S.done){if(k===0)c+=' good';else if(S.pick===j)c+=' bad'}
+   return `<button class="${c}" data-j="${j}"${S.done?' disabled':''}><b>${j+1}</b><span>${esc(it.opts[k])}</span></button>`}).join('')+'</div>';
+ }else if(it.type==='cmd'){
+  h+=`<p class="q">${esc(it.q)}</p>`+inputLine(it);
+ }else if(it.type==='out'){
+  h+=`<p class="q">Какая команда дала такой вывод?</p>${it.hint?`<p class="cm">${esc(it.hint)}</p>`:''}<pre class="scr">${esc(it.screen)}</pre>`+inputLine(it);
+ }else if(it.type==='pred'){
+  h+=`<p class="q">Что выведет этот фрагмент?</p><pre class="code">${esc(it.code)}</pre>`+inputLine(it);
+ }else{
+  h+=`<p class="q">Что должно стоять на месте ▮▮▮?</p><pre class="code">${esc(it.code).replace('▮▮▮','<mark>▮▮▮</mark>')}</pre>`+inputLine(it);
+ }
+ if(S.err) h+=`<p class="err">${esc(S.err)}</p>`;
+ if(S.done) h+=verdict(it);
+ scr.innerHTML=h;
+ btns(false);
+ const inp=$('#ans');
+ if(inp&&!S.done){inp.addEventListener('input',e=>{S.val=e.target.value});inp.focus({preventScroll:true})}
+ if(S.done) $('#next').focus({preventScroll:true});
+}
+function btns(none){
+ $('#check').hidden=none||S.done||(S.pool.length&&byId[S.pool[S.i]]?.type==='mc');
+ $('#skip').hidden=none||S.done;
+ $('#next').hidden=none||!S.done;
+}
+function record(it,good){
+ store[it.id]=good?1:0; save();
+ S.answered++; if(good){S.right++;S.streak++}else{S.streak=0;S.wrong.push(it.id)}
+ stats(); progress();
+}
+function check(){
+ const it=byId[S.pool[S.i]]; if(!it||S.done||it.type==='mc') return;
+ const inp=$('#ans'); if(inp) S.val=inp.value;
+ if(!S.val.trim()){S.err='Введите ответ или нажмите «Не знаю».';render();return}
+ S.err=''; S.good=correct(it,S.val); S.done=true; record(it,S.good); render();
+}
+function pickOpt(j){
+ const it=byId[S.pool[S.i]]; if(!it||S.done||it.type!=='mc'||j>=S.order.length) return;
+ S.pick=j; S.good=S.order[j]===0; S.done=true; record(it,S.good); render();
+}
+function giveUp(){
+ const it=byId[S.pool[S.i]]; if(!it||S.done) return;
+ const inp=$('#ans'); if(inp) S.val=inp.value;
+ S.gave=true; S.good=false; S.done=true; S.err=''; record(it,false); render();
+}
+function next(){ if(!S.done) return; S.i++; if(S.i<S.pool.length) fresh(); render(); }
+function end(){
+ $('#cnt').textContent=S.pool.length+' / '+S.pool.length; $('#pbar').style.width='100%';
+ const w=[...new Set(S.wrong)].map(id=>byId[id]);
+ let h=`<p class="cm"># сессия завершена</p><p class="q">Верно ${S.right} из ${S.answered}.</p>`;
+ if(w.length){
+  h+='<p>Повторите:</p><ul class="sum">'+w.map(it=>`<li>${it.type==='mc'?it.q+' — <code>'+esc(it.opts[0])+'</code>':(it.type==='cmd'?esc(it.q)+' — ':'')+(it.type==='pred'?'':'<code>'+esc(it.ans)+'</code>')+(it.type==='pred'?'<code>'+esc(it.code.split('\n')[0])+'…</code> → '+esc(it.ans.replace(/\n/g,' ')):'')}</li>`).join('')+'</ul>';
+ }else h+='<p>Без ошибок. Можно взять больше вопросов или другой режим.</p>';
+ h+='<div class="acts"><button class="btn pri" id="again">Новая сессия</button>'+(w.length?'<button class="btn" id="again2">Только эти ошибки</button>':'')+'</div>';
+ $('#screen').innerHTML=h; btns(true);
+ $('#again').onclick=()=>start(false);
+ if(w.length) $('#again2').onclick=()=>{Object.assign(S,{pool:shuffle(w.map(x=>x.id)),i:0,right:0,answered:0,streak:0,wrong:[]});fresh();render();stats()};
+}
+function stats(){
+ $('#sRight').textContent=S.right; $('#sDone').textContent=S.answered; $('#sStreak').textContent=S.streak;
+ const nw=items.filter(it=>store[it.id]===0).length;
+ $('#mist').textContent='Повторить ошибки'+(nw?' ('+nw+')':''); $('#mist').disabled=!nw;
+}
+function chips(){
+ $('#chips').innerHTML=Object.keys(T).map(k=>`<button data-t="${k}" aria-pressed="${S.topics.has(k)}">${esc(T[k])}</button>`).join('')+`<button data-t="*" aria-pressed="${S.topics.size===Object.keys(T).length}">Все темы</button>`;
+}
+function progress(){
+ $('#tp').innerHTML=Object.keys(T).map(k=>{
+  const all=items.filter(it=>it.topic===k),g=all.filter(it=>store[it.id]===1).length,r=all.filter(it=>store[it.id]===0).length,n=all.length;
+  return `<span class="nm">${esc(T[k])}</span><span class="tr" role="img" aria-label="${g} верно, ${r} с ошибкой из ${n}"><i class="g" style="width:${g/n*100}%"></i><i class="r" style="width:${r/n*100}%"></i></span><span class="n">${g} из ${n}</span>`}).join('');
+}
+
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.mode=b.dataset.m;document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));start(false)});
+$('#chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const t=b.dataset.t;
+ if(t==='*') S.topics=new Set(S.topics.size===Object.keys(T).length?[]:Object.keys(T));
+ else{S.topics.has(t)?S.topics.delete(t):S.topics.add(t)}
+ chips(); start(false)});
+$('#len').addEventListener('change',()=>start(false));
+$('#restart').addEventListener('click',()=>start(false));
+$('#mist').addEventListener('click',()=>start(true));
+$('#check').addEventListener('click',check);
+$('#skip').addEventListener('click',giveUp);
+$('#next').addEventListener('click',next);
+$('#screen').addEventListener('click',e=>{const b=e.target.closest('.opt');if(b)pickOpt(+b.dataset.j)});
+let armed=false;
+$('#reset').addEventListener('click',e=>{if(!armed){armed=true;e.target.textContent='Точно сбросить? Нажмите ещё раз';setTimeout(()=>{armed=false;e.target.textContent='Сбросить прогресс'},4000);return}
+ store={};save();armed=false;e.target.textContent='Сбросить прогресс';progress();stats()});
+document.addEventListener('keydown',e=>{
+ const it=byId[S.pool[S.i]]; if(!it) return;
+ const ta=e.target.tagName==='TEXTAREA';
+ if(e.key==='Enter'){
+  if(ta&&!(e.ctrlKey||e.metaKey)) return;
+  if(e.target.tagName==='BUTTON'&&e.target.id!=='next'&&!S.done) return;
+  e.preventDefault(); S.done?next():check(); return;
+ }
+ if(it.type==='mc'&&!S.done&&/^[1-4]$/.test(e.key)&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) pickOpt(+e.key-1);
+});
+
+chips(); progress(); start(false);
+}
+</script>
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{})}</script>
+</body>
+</html>
