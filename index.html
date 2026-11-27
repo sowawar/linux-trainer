@@ -169,7 +169,7 @@ details p,details li{color:var(--mut);max-width:70ch}
 <script>
 {
 /*DATA*/
-const T={var:'Вариант преподавателя (образец)',l1:'Лаб 1 · Установка, пакеты',l2:'Лаб 2 · Диски, GRUB',l3:'Лаб 3 · Терминал, текст',l5:'Лаб 5 · Процессы, systemd',l6:'Лаб 6 · Разделы, LVM',l7:'Лаб 7 · Сеть, SSH, UFW',l8:'Лаб 8 · Bash',l9:'Лаб 9 · Bash+, cron, бэкап',l10:'Лаб 10 · Docker, k8s',lec:'Лекции 12–13 (доп.)'};
+const T={var:'Вариант преподавателя (образец)',v34:'Вариант № 34',l1:'Лаб 1 · Установка, пакеты',l2:'Лаб 2 · Диски, GRUB',l3:'Лаб 3 · Терминал, текст',l5:'Лаб 5 · Процессы, systemd',l6:'Лаб 6 · Разделы, LVM',l7:'Лаб 7 · Сеть, SSH, UFW',l8:'Лаб 8 · Bash',l9:'Лаб 9 · Bash+, cron, бэкап',l10:'Лаб 10 · Docker, k8s',lec:'Лекции 12–13 (доп.)'};
 const sv=(v,n)=>new RegExp('^systemctl '+v+' '+n+'(\\.service)?$');
 const kn=r=>new RegExp('^kubectl (?:(?:-n |--namespace[ =])lab10 '+r+'|'+r+' (?:-n |--namespace[ =])lab10)$');
 
@@ -262,6 +262,36 @@ const MC=[
 ];
 
 const CMD=[
+['v34','01. Покажите содержимое конфигурации монтирования.','cat /etc/fstab',['less /etc/fstab'],'Постоянная конфигурация монтирования — /etc/fstab.'],
+['v34','02. Покажите службы с ошибками.','systemctl --failed',['systemctl list-units --failed','systemctl list-units --state=failed','systemctl --state=failed'],''],
+['v34','03. Выведите значение переменной USER.','echo $USER',['echo "$USER"','printf "%s\\n" "$USER"'],'','student'],
+['v34','04. Проверьте доступность localhost двумя пакетами.','ping -c 2 localhost',['ping -c2 localhost','ping -c 2 127.0.0.1','ping -c2 127.0.0.1'],''],
+['v34','05. Проверьте синтаксис hello.sh.','bash -n hello.sh',[],'-n — проверка без запуска.'],
+['v34','06. Покажите таблицу соседей.','ip neigh',['ip n','ip neighbor','ip neighbour','ip neigh show'],''],
+['v34','07. Выведите список файлов и отберите строки с .txt.','ls | grep "\\.txt"',['ls | grep txt','ls | grep .txt','ls | grep "txt"','ls | grep ".txt"','ls -l | grep txt','ls -l | grep "\\.txt"','ls | grep "\\.txt$"'],'Точка в grep — любой символ; \\. — именно точка.'],
+['v34','08. Покажите последние 5 входов пользователей.','last -n 5',['last -5','last | head -n 5','last | head -5'],'last читает /var/log/wtmp.'],
+['v34','09. Создайте файл a.txt и только при успехе покажите его свойства.','touch a.txt && ls -l a.txt',['touch a.txt && stat a.txt','touch a.txt && ls -la a.txt','touch a.txt && file a.txt'],'&& — только при успехе.'],
+['v34','10. Покажите метаданные note.txt.','stat note.txt',[],''],
+['v34','11. Выведите процессы и отберите строки с bash.','ps aux | grep bash',['ps -ef | grep bash','ps -e | grep bash','ps ax | grep bash','ps aux | grep "bash"','ps -ef | grep "bash"'],'pgrep -a bash делает похожее, но задание — про конвейер.'],
+['v34','12. Создайте каталог test и только при успехе перейдите в него.','mkdir test && cd test',['mkdir -p test && cd test'],''],
+['v34','13. Запустите ожидание 20 секунд в фоне.','sleep 20 &',['sleep 20s &'],''],
+['v34','14. Покажите идентификаторы пользователя.','id',['id $USER','id -u'],''],
+['v34','15. Покажите число байтов файла note.txt.','wc -c note.txt',['wc -c < note.txt','stat -c %s note.txt','stat -c "%s" note.txt','cat note.txt | wc -c','du -b note.txt'],'-c — байты (chars), -l — строки, -w — слова.'],
+['v34','16. Покажите использование оперативной памяти.','free -h',['free','free -m'],''],
+['v34','17. Подсчитайте строки в note.txt.','wc -l note.txt',['wc -l < note.txt','cat note.txt | wc -l'],''],
+['v34','18. Попробуйте перейти в каталог no_dir; при ошибке выведите «Нет каталога».','cd no_dir || echo "Нет каталога"',[/^cd no_dir( 2>\/dev\/null)? \|\| echo "?Нет каталога"?$/],'|| — только при ошибке.'],
+['v34','19. Покажите нумерованные правила UFW.','ufw status numbered',[],''],
+['v34','20. Назначьте файлу note.txt права 644.','chmod 644 note.txt',['chmod u=rw,go=r note.txt','chmod u=rw,g=r,o=r note.txt'],'6 = rw-, 4 = r--.'],
+['v34','21. Покажите переменные окружения.','env',['printenv','export -p'],''],
+['v34','22. Покажите слушающие TCP-порты.','ss -lnt',[/^ss -(?=[lnt]{3}$)(?!.*(.).*\1)[lnt]+$/,/^ss -(?=[lntp]{4}$)(?!.*(.).*\1)[lntp]+$/,'ss -lt','ss -tl','netstat -lnt','netstat -tln'],'-l слушающие, -n числа, -t TCP.'],
+['v34','23. Покажите текущие монтирования.','findmnt',['mount','cat /proc/mounts','findmnt -l'],'Текущее состояние, а не fstab.'],
+['v34','24. Переименуйте old.txt в new.txt.','mv old.txt new.txt',[],''],
+['v34','25. Попробуйте перейти в каталог unknown; при ошибке выведите «Ошибка».','cd unknown || echo "Ошибка"',[/^cd unknown( 2>\/dev\/null)? \|\| echo "?Ошибка"?$/],''],
+['v34','26. Выведите процессы текущего пользователя.','ps -u $USER',['ps -u "$USER"','ps -U $USER','ps -fu $USER','ps ux','ps x'],''],
+['v34','27. Запустите ожидание 15 секунд в фоне.','sleep 15 &',['sleep 15s &'],''],
+['v34','28. Покажите правила UFW.','ufw status',['ufw status verbose'],''],
+['v34','29. Выведите сведения об активных сеансах.','who',['w','who -a','loginctl list-sessions'],''],
+['v34','30. Выведите содержимое note.txt.','cat note.txt',[],''],
 ['var','01. Покажите текущий каталог в терминале.','pwd',[],'','/home/student'],
 ['var','02. Выведите только имя текущего пользователя.','whoami',['id -un','echo $USER','echo "$USER"'],'','student'],
 ['var','03. Покажите список файлов каталога /tmp в подробном формате.','ls -l /tmp',['ls -l /tmp/','ls -la /tmp','ls -al /tmp','ls -lh /tmp','ls -lah /tmp','ls -alh /tmp'],'-l — long, подробный формат.'],
