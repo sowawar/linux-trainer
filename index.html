@@ -169,7 +169,7 @@ details p,details li{color:var(--mut);max-width:70ch}
 <script>
 {
 /*DATA*/
-const T={l1:'Лаб 1 · Установка, пакеты',l2:'Лаб 2 · Диски, GRUB',l3:'Лаб 3 · Терминал, текст',l5:'Лаб 5 · Процессы, systemd',l6:'Лаб 6 · Разделы, LVM',l7:'Лаб 7 · Сеть, SSH, UFW',l8:'Лаб 8 · Bash',l9:'Лаб 9 · Bash+, cron, бэкап',l10:'Лаб 10 · Docker, k8s',lec:'Лекции 12–13 (доп.)'};
+const T={var:'Вариант преподавателя (образец)',l1:'Лаб 1 · Установка, пакеты',l2:'Лаб 2 · Диски, GRUB',l3:'Лаб 3 · Терминал, текст',l5:'Лаб 5 · Процессы, systemd',l6:'Лаб 6 · Разделы, LVM',l7:'Лаб 7 · Сеть, SSH, UFW',l8:'Лаб 8 · Bash',l9:'Лаб 9 · Bash+, cron, бэкап',l10:'Лаб 10 · Docker, k8s',lec:'Лекции 12–13 (доп.)'};
 const sv=(v,n)=>new RegExp('^systemctl '+v+' '+n+'(\\.service)?$');
 const kn=r=>new RegExp('^kubectl (?:(?:-n |--namespace[ =])lab10 '+r+'|'+r+' (?:-n |--namespace[ =])lab10)$');
 
@@ -262,6 +262,36 @@ const MC=[
 ];
 
 const CMD=[
+['var','01. Покажите текущий каталог в терминале.','pwd',[],'','/home/student'],
+['var','02. Выведите только имя текущего пользователя.','whoami',['id -un','echo $USER','echo "$USER"'],'','student'],
+['var','03. Покажите список файлов каталога /tmp в подробном формате.','ls -l /tmp',['ls -l /tmp/','ls -la /tmp','ls -al /tmp','ls -lh /tmp','ls -lah /tmp','ls -alh /tmp'],'-l — long, подробный формат.'],
+['var','04. Перейдите в домашний каталог.','cd ~',['cd','cd $HOME','cd "$HOME"','cd ~/'],'Просто cd без аргументов тоже ведёт домой.'],
+['var','05. Создайте каталог practice_demo.','mkdir practice_demo',['mkdir -p practice_demo'],''],
+['var','06. Создайте пустой файл practice_demo/readme.txt.','touch practice_demo/readme.txt',['> practice_demo/readme.txt',': > practice_demo/readme.txt'],''],
+['var','07. Запишите слово READY в practice_demo/readme.txt.','echo READY > practice_demo/readme.txt',['echo "READY" > practice_demo/readme.txt','printf "READY\\n" > practice_demo/readme.txt'],'> перезаписывает файл.'],
+['var','08. Добавьте слово DONE в конец этого файла.','echo DONE >> practice_demo/readme.txt',['echo "DONE" >> practice_demo/readme.txt','printf "DONE\\n" >> practice_demo/readme.txt'],'>> дописывает в конец, не стирая.'],
+['var','09. Покажите содержимое файла practice_demo/readme.txt.','cat practice_demo/readme.txt',[],'','READY\nDONE'],
+['var','10. Скопируйте readme.txt в файл copy.txt внутри того же каталога (practice_demo).','cp practice_demo/readme.txt practice_demo/copy.txt',['cp readme.txt copy.txt','cd practice_demo && cp readme.txt copy.txt'],'Если ты уже внутри practice_demo, хватит cp readme.txt copy.txt.'],
+['var','11. Покажите первые две строки файла readme.txt.','head -n 2 practice_demo/readme.txt',[/^head (-n ?2|-2) (practice_demo\/)?readme\.txt$/],'','READY\nDONE'],
+['var','12. Подсчитайте количество строк файла readme.txt.','wc -l practice_demo/readme.txt',[/^wc -l <? ?(practice_demo\/)?readme\.txt$/,/^cat (practice_demo\/)?readme\.txt \| wc -l$/],'','2 practice_demo/readme.txt'],
+['var','13. Найдите слово READY в файле readme.txt.','grep READY practice_demo/readme.txt',[/^grep (-w |-n |-i )?"?READY"? (practice_demo\/)?readme\.txt$/],'','READY'],
+['var','14. Покажите файлы с расширением txt в каталоге practice_demo.','ls practice_demo/*.txt',['ls -l practice_demo/*.txt','find practice_demo -name "*.txt"','find practice_demo -type f -name "*.txt"','ls practice_demo | grep txt','ls practice_demo | grep "\\.txt$"'],'Маску *.txt раскрывает оболочка.','practice_demo/copy.txt  practice_demo/readme.txt'],
+['var','15. Выведите текущую дату.','date',[],'','Fri Nov 27 10:20:00 +05 2026'],
+['var','16. Покажите версию ядра Linux.','uname -r',['uname -a'],'','6.8.0-51-generic'],
+['var','17. Покажите сведения об использовании памяти в удобном формате.','free -h',[],'-h — human, единицы Mi/Gi.'],
+['var','18. Выведите свободное место в файловых системах.','df -h',['df -hT','df -Th','df'],''],
+['var','19. Покажите идентификаторы пользователя и его групп.','id',['id $USER','id student'],'','uid=1000(student) gid=1000(student) groups=1000(student),27(sudo)'],
+['var','20. Покажите процессы текущего пользователя.','ps -u $USER',['ps -u "$USER"','ps -U $USER','ps -fu $USER','ps ux','ps x','ps -u student'],''],
+['var','21. Покажите IP-адреса интерфейсов в кратком формате.','ip -br address',['ip -br a','ip -br addr','ip -brief address','ip -brief a','ip -br address show'],'-br — brief, кратко.'],
+['var','22. Отправьте два ICMP-запроса на loopback-адрес.','ping -c 2 127.0.0.1',['ping -c2 127.0.0.1','ping -c 2 localhost','ping -c2 localhost'],'Без -c ping шлёт бесконечно.'],
+['var','23. Покажите список смонтированных файловых систем.','findmnt',['mount','cat /proc/mounts','findmnt -l','df -hT'],''],
+['var','24. Проверьте синтаксис сценария sample.sh, не запуская его.','bash -n sample.sh',[],'-n — no execute: только проверка синтаксиса.'],
+['var','25. Выведите список файлов /etc и оставьте строки, содержащие ssh.','ls /etc | grep ssh',['ls /etc | grep "ssh"','ls -1 /etc | grep ssh','ls /etc/ | grep ssh','ls -l /etc | grep ssh'],'Конвейер: вывод ls идёт на вход grep.','ssh\nsshd_config.d'],
+['var','26. Выведите содержимое /etc/passwd и подсчитайте количество строк.','cat /etc/passwd | wc -l',['wc -l /etc/passwd','wc -l < /etc/passwd'],'','42'],
+['var','27. Создайте каталог newdir и только при успехе создайте в нём файл a.txt.','mkdir newdir && touch newdir/a.txt',['mkdir -p newdir && touch newdir/a.txt','mkdir newdir && cd newdir && touch a.txt'],'&& — следующая команда выполнится, только если предыдущая завершилась успешно (код 0).'],
+['var','28. Перейдите в каталог /tmp и только при успехе покажите его путь.','cd /tmp && pwd',[],'','/tmp'],
+['var','29. Попробуйте открыть отсутствующий файл absent_demo.txt; при ошибке выведите NOT_FOUND.','cat absent_demo.txt || echo NOT_FOUND',[/^(cat|less|head) absent_demo\.txt( 2>\/dev\/null)? \|\| echo "?NOT_FOUND"?$/,/^(\[ -f absent_demo\.txt \]|test -f absent_demo\.txt) \|\| echo "?NOT_FOUND"?$/],'|| — выполнить вторую команду, только если первая завершилась с ошибкой.','cat: absent_demo.txt: No such file or directory\nNOT_FOUND'],
+['var','30. Запустите ожидание на 15 секунд в фоновом режиме.','sleep 15 &',['sleep 15s &'],'& в конце — фоновый режим.','[1] 4821'],
 ['l1','Вывести название и версию дистрибутива из стандартного файла','cat /etc/os-release',['less /etc/os-release','cat /usr/lib/os-release'],'Файл есть во всех четырёх дистрибутивах лабы.','PRETTY_NAME="Linux Mint 22.1"\nNAME="Linux Mint"\nVERSION_ID="22.1"'],
 ['l1','Узнать версию ядра','uname -r',[],'','6.8.0-51-generic'],
 ['l1','Узнать архитектуру системы','uname -m',['arch'],'','x86_64'],
